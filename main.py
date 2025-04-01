@@ -58,15 +58,25 @@ def extract_product_data(driver):
             brand = "نامشخص"
             model = name
 
-        # شناسایی و حذف فقط "نامشخص" (نه مقادیر دیگر مانند مشکی یا قیمت‌ها)
-        if brand != "نامشخص" or model != "نامشخص":
-            print(f"برند: {brand}، مدل: {model}")  # پرینت برند و مدل برای اطمینان
-            products.append((brand, model))
+        # بررسی و حذف رنگ و قیمت
+        words = model.split()
+        color, price = None, None  # مقدار پیش‌فرض
+
+        if words and is_number(words[-1]):  # اگر آخرین کلمه عدد باشد، پس قیمت است
+            price = words.pop()  # حذف آخرین مقدار و ذخیره به‌عنوان قیمت
+        
+        if words and len(words[-1]) <= 6:  # اگر آخرین کلمه یک رنگ باشد (حداکثر 6 کاراکتر)
+            color = words.pop()  # حذف آخرین مقدار و ذخیره به‌عنوان رنگ
+
+        model = " ".join(words)  # مدل نهایی بعد از حذف رنگ و قیمت
+
+        if model.strip():  # اگر مدل معتبر بود، ذخیره کن
+            print(f"برند: {brand}، مدل: {model}، رنگ: {color}، قیمت: {price}")  
+            products.append((brand, model, color, price))
         else:
-            print(f"خطا: اطلاعات نامعتبر شناسایی شد، {name}")
+            print(f"⚠️ اطلاعات نامعتبر شناسایی شد و حذف شد: {name}")
 
     return products[25:]  # حذف موارد اضافی در ابتدای لیست
-
 
 def is_number(model_str):
     try:
