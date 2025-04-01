@@ -82,16 +82,14 @@ def split_message(message, max_length=4000):
     return [message[i:i+max_length] for i in range(0, len(message), max_length)]
 
 def decorate_line(line):
-    if line.startswith(('🔵', '🟡', '🍏', '🟣')):
+    if line.startswith(('🔵', '🟡', '🍏')):
         return line
-    if "Galaxy" in line:
+    if "lcd" in line:
         return f"🔵 {line}"
     elif "POCO" in line or "Poco" in line or "Redmi" in line:
         return f"🟡 {line}"
-    elif "iPhone" in line:
+    elif "huawei" in line:
         return f"🍏 {line}"
-    elif any(keyword in line for keyword in ["RAM", "FA", "Classic"]):
-        return f"🟣 {line}"
     else:
         return line
 
@@ -106,8 +104,6 @@ def categorize_messages(lines):
             current_category = "🟡"
         elif line.startswith("🍏"):
             current_category = "🍏"
-        elif line.startswith("🟣"):
-            current_category = "🟣"
 
         if current_category:
             categories[current_category].append(line)
@@ -119,7 +115,6 @@ def get_header_footer(category, update_date):
         "🔵": f"📅 بروزرسانی قیمت در تاریخ {update_date} می باشد\n✅ لیست پخش موبایل اهورا\n⬅️ موجودی سامسونگ ➡️\n",
         "🟡": f"📅 بروزرسانی قیمت در تاریخ {update_date} می باشد\n✅ لیست پخش موبایل اهورا\n⬅️ موجودی شیایومی ➡️\n",
         "🍏": f"📅 بروزرسانی قیمت در تاریخ {update_date} می باشد\n✅ لیست پخش موبایل اهورا\n⬅️ موجودی آیفون ➡️\n",
-        "🟣": f"📅 بروزرسانی قیمت در تاریخ {update_date} می باشد\n✅ لیست پخش موبایل اهورا\n⬅️ موجودی متفرقه ➡️\n",
     }
     footer = "\n\n☎️ شماره های تماس :\n📞 09371111558\n📞 02833991417"
     return headers[category], footer
@@ -148,7 +143,7 @@ def main():
         logging.info("✅ داده‌ها آماده‌ی استخراج هستند!")
         scroll_page(driver)
 
-        valid_brands = ["Galaxy", "POCO", "Redmi", "iPhone", "Redtone", "VOCAL", "TCL", "NOKIA", "Honor", "Huawei", "GLX", "+Otel"]
+        valid_brands = ["Galaxy"]
         brands, models = extract_product_data(driver, valid_brands)
         driver.quit()
 
