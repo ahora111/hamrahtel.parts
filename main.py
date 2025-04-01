@@ -88,15 +88,25 @@ def escape_markdown(text):
         text = text.replace(char, '\\' + char)
     return text
 
+import time  # اضافه کردن این خط در ابتدای کد
+
 def send_telegram_message(message, bot_token, chat_id):
     message = escape_markdown(message)
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     params = {"chat_id": chat_id, "text": message, "parse_mode": "MarkdownV2"}
+    
     response = requests.get(url, params=params)
+    
     if response.json().get('ok') is False:
         logging.error(f"❌ خطا در ارسال پیام: {response.json()}")
+        if response.json().get('error_code') == 429:  # خطای Too Many Requests
+            retry_after = response.json().get('parameters', {}).get('retry_after', 5)
+            logging.warning(f"⏳ باید {retry_after} ثانیه صبر کنیم...")
+            time.sleep(retry_after)  # صبر قبل از ارسال مجدد
     else:
         logging.info("✅ پیام ارسال شد!")
+    
+    time.sleep(2)  # وقفه بین ارسال پیام‌ها
 
 def main():
     try:
