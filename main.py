@@ -68,9 +68,9 @@ def extract_product_data(driver):
     return products[25:]  # حذف موارد اضافی در ابتدای لیست
 
     
-        print(f"برند: {brand}، مدل: {model}")  # پرینت برند و مدل برای اطمینان
+            print(f"برند: {brand}، مدل: {model}")  # پرینت برند و مدل برای اطمینان
 
-        products.append((brand, model))
+           products.append((brand, model))
 
     return products[25:]  # حذف موارد اضافی در ابتدای لیست
 
