@@ -63,13 +63,12 @@ def escape_markdown(text):
     return text
 
 def send_telegram_message(message, bot_token, chat_id):
-    """ارسال پیام به تلگرام و بررسی پاسخ API"""
-    message = escape_markdown(message)  # فرار دادن کاراکترهای خاص
+    """ارسال پیام به تلگرام با فرمت HTML"""
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     params = {
         "chat_id": chat_id,
         "text": message,
-        "parse_mode": "MarkdownV2"
+        "parse_mode": "HTML"  # 🔥 تغییر به HTML
     }
     response = requests.post(url, json=params)
     
@@ -78,6 +77,7 @@ def send_telegram_message(message, bot_token, chat_id):
     logging.info(f"📩 پاسخ تلگرام: {response_data}")  
     
     return response_data
+
 
 
 
