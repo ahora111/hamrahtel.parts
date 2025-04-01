@@ -3,17 +3,15 @@ import os
 import time
 import requests
 import logging
-import threading
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from persiantools.jdatetime import JalaliDate
 
 # تنظیمات مربوط به تلگرام
-BOT_TOKEN = "8187924543:AAH0jZJvZdpq_34um8R_yCyHQvkorxczXNQ"
-CHAT_ID = "-1002683452872"
+BOT_TOKEN = "YOUR_TELEGRAM_BOT_TOKEN"
+CHAT_ID = "YOUR_CHAT_ID"
 
 # تنظیمات لاگ‌گیری
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -46,41 +44,20 @@ def extract_product_data(driver):
     models = [product.text.strip().replace("تومانءء", "") for product in product_elements]
     return models[25:]
 
+def is_number(model_str):
+    try:
+        float(model_str.replace(",", ""))
+        return True
+    except ValueError:
+        return False
 
-
-# دسته‌بندی پیام‌ها بر اساس کلمات کلیدی
-def categorize_messages(models):
-    categorized_messages = []  # لیست نهایی برای پیام‌ها
-    current_category = ""  # دسته‌بندی فعلی
-    current_lines = []  # لیست سطرهای مرتبط با دسته فعلی
-    
-    for model in models:
-        new_category = ""
-        if "HUAWEI" in model:
-            new_category = "🟥"
-        elif "REDMI" in model or "POCO" in model:
-            new_category = "🟨"
-        elif "LCD" in model:
-            new_category = "🟦"
-        
-        # اگر دسته‌بندی تغییر کرد، پیام قبلی را ذخیره کن
-        if new_category:
-            if current_lines:
-                categorized_messages.append("\n".join(current_lines))
-            current_category = new_category
-            current_lines = [f"{current_category} {model}"]
-        else:
-            if current_category:  
-                current_lines.append(model)  # اضافه کردن مدل‌های بدون دسته‌بندی به دسته‌ی قبلی
-            else:
-                categorized_messages.append(model)  # اگر دسته‌بندی نداشت، جداگانه ذخیره شود
-
-    # ذخیره آخرین دسته‌بندی
-    if current_lines:
-        categorized_messages.append("\n".join(current_lines))
-    
-    return categorized_messages
-
+def process_model(model_str):
+    model_str = model_str.replace("٬", "").replace(",", "").strip()
+    if is_number(model_str):
+        model_value = float(model_str)
+        model_value_with_increase = model_value * 1.015
+        return f"{model_value_with_increase:,.0f}"
+    return model_str
 
 def escape_markdown(text):
     escape_chars = ['\\', '(', ')', '[', ']', '~', '*', '_', '-', '+', '>', '#', '.', '!', '|']
@@ -88,25 +65,37 @@ def escape_markdown(text):
         text = text.replace(char, '\\' + char)
     return text
 
-import time  # اضافه کردن این خط در ابتدای کد
+def split_message(message, max_length=4000):
+    return [message[i:i+max_length] for i in range(0, len(message), max_length)]
 
 def send_telegram_message(message, bot_token, chat_id):
-    message = escape_markdown(message)
-    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-    params = {"chat_id": chat_id, "text": message, "parse_mode": "MarkdownV2"}
-    
-    response = requests.get(url, params=params)
-    
-    if response.json().get('ok') is False:
-        logging.error(f"❌ خطا در ارسال پیام: {response.json()}")
-        if response.json().get('error_code') == 429:  # خطای Too Many Requests
-            retry_after = response.json().get('parameters', {}).get('retry_after', 5)
-            logging.warning(f"⏳ باید {retry_after} ثانیه صبر کنیم...")
-            time.sleep(retry_after)  # صبر قبل از ارسال مجدد
-    else:
-        logging.info("✅ پیام ارسال شد!")
-    
-    time.sleep(2)  # وقفه بین ارسال پیام‌ها
+    message_parts = split_message(message)
+    for part in message_parts:
+        part = escape_markdown(part)
+        url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+        params = {"chat_id": chat_id, "text": part, "parse_mode": "MarkdownV2"}
+        response = requests.get(url, params=params)
+        if response.json().get('ok') is False:
+            logging.error(f"❌ خطا در ارسال پیام: {response.json()}")
+            return
+    logging.info("✅ پیام ارسال شد!")
+
+def categorize_data(models):
+    categorized_data = {"HUAWEI": [], "REDMI_POCO": [], "LCD": []}
+    current_key = None
+    for model in models:
+        if "HUAWEI" in model:
+            current_key = "HUAWEI"
+            categorized_data[current_key].append(f"🟥 {model}")
+        elif "REDMI" in model or "poco" in model:
+            current_key = "REDMI_POCO"
+            categorized_data[current_key].append(f"🟨 {model}")
+        elif "LCD" in model:
+            current_key = "LCD"
+            categorized_data[current_key].append(f"🟦 {model}")
+        elif current_key:
+            categorized_data[current_key].append(model)
+    return categorized_data
 
 def main():
     try:
@@ -124,14 +113,10 @@ def main():
         driver.quit()
 
         if models:
-            # اعمال دسته‌بندی‌ها و افزودن ایموجی‌ها به هر سطر
-            decorated_lines = [decorate_line(line) for line in models]
-            categorized_messages = categorize_messages(decorated_lines)
-
-            # ارسال پیام‌ها به تلگرام
-            for category, lines in categorized_messages.items():
-                if lines:
-                    message = "\n".join(lines)
+            categorized_data = categorize_data(models)
+            for category, messages in categorized_data.items():
+                if messages:
+                    message = "\n".join(messages)
                     send_telegram_message(message, BOT_TOKEN, CHAT_ID)
         else:
             logging.warning("❌ داده‌ای برای ارسال وجود ندارد!")
