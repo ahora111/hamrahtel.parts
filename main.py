@@ -47,7 +47,7 @@ def extract_product_data(driver):
     return models[25:]
 
 def categorize_messages(models):
-    categories = {"🟥": [], "🟨": [], "🟦": []}
+    categories = {"🟥": [], "🟨": [], "🟦": [], "general": []}
     
     for model in models:
         line = model
@@ -60,6 +60,8 @@ def categorize_messages(models):
         elif "LCD" in model:
             line = f"🟦 {model}"
             categories["🟦"].append(line)
+        else:
+            categories["general"].append(line)
     
     return categories
 
