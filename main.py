@@ -82,6 +82,8 @@ def send_telegram_message(message, bot_token, chat_id):
 
 from persiantools.jdatetime import JalaliDate
 
+from persiantools.jdatetime import JalaliDate
+
 def create_header(category):
     today_date = JalaliDate.today().strftime('%Y/%m/%d')
     if category == "LCD":
@@ -91,6 +93,9 @@ def create_header(category):
     elif category == "HUAWEI":
         return f"📅 بروزرسانی قیمت در تاریخ {today_date} می باشد\n✅ لیست پخش قطعات موبایل اهورا\n⬅️ موجودی قطعات هوآوی ➡️\n\n"
     return ""
+
+def create_footer():
+    return "\n\n☎️ شماره های تماس :\n📞 09371111558\n📞 02833991417"
 
 def categorize_data(models):
     categorized_data = {"HUAWEI": [], "REDMI_POCO": [], "LCD": []}
@@ -129,7 +134,8 @@ def main():
             for category, messages in categorized_data.items():
                 if messages:
                     header = create_header(category)
-                    message = header + "\n".join(messages)
+                    footer = create_footer()
+                    message = header + "\n".join(messages) + footer
                     send_telegram_message(message, BOT_TOKEN, CHAT_ID)
         else:
             logging.warning("❌ داده‌ای برای ارسال وجود ندارد!")
