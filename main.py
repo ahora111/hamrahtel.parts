@@ -56,20 +56,24 @@ def extract_product_data(driver, valid_brands):
 
     return brands[25:], models[25:]
 
+import re
+
 def is_number(model_str):
-    try:
-        float(model_str.replace(",", ""))
-        return True
-    except ValueError:
-        return False
+    """ بررسی می‌کند که آیا رشته شامل عدد معتبر است یا نه. """
+    model_str = model_str.replace("٬", "").replace(",", "").strip()
+    return bool(re.match(r"^\d+(\.\d+)?$", model_str))
 
 def process_model(model_str):
+    """ مقدار عددی را ۱.۵ درصد افزایش می‌دهد، در غیر این‌صورت همان مقدار را برمی‌گرداند. """
     model_str = model_str.replace("٬", "").replace(",", "").strip()
+
     if is_number(model_str):
         model_value = float(model_str)
-        model_value_with_increase = model_value * 1.015
-        return f"{model_value_with_increase:,.0f}"
-    return model_str
+        model_value_with_increase = model_value * 1.015  # افزایش ۱.۵ درصدی
+        return f"{model_value_with_increase:,.0f}".replace(",", "٬")  # نمایش صحیح با جداکننده هزارگان
+
+    return model_str  # اگر عدد نبود، همان مقدار را برمی‌گرداند
+
 
 def escape_markdown(text):
     escape_chars = ['\\', '(', ')', '[', ']', '~', '*', '_', '-', '+', '>', '#', '.', '!', '|']
