@@ -114,7 +114,13 @@ def categorize_data(models):
             categorized_data[current_key].append(model)
     return categorized_data
 
-def send_final_message(bot_token, chat_id):
+def send_message_with_buttons(bot_token, chat_id, message_ids):
+    """
+    ارسال پیام آخر همراه با دکمه‌های شیشه‌ای که به پیام‌های قبلی لینک می‌شود.
+    :param bot_token: توکن ربات
+    :param chat_id: شناسه چت
+    :param message_ids: دیکشنری با شناسه پیام‌های مرتبط
+    """
     final_message = """
 ✅ لیست قطعات گوشیای بالا بروز میباشد. تحویل کالا بعد از ثبت خرید، ساعت 11:30 صبح روز بعد می باشد.
 
@@ -130,7 +136,28 @@ def send_final_message(bot_token, chat_id):
 📞 09371111558
 📞 02833991417
 """
-    send_telegram_message(final_message, bot_token, chat_id)
+
+    # دکمه‌های شیشه‌ای
+    inline_keyboard = {
+        "inline_keyboard": [
+            [{"text": "قطعات سامسونگ", "url": f"https://t.me/c/{chat_id.replace('-100', '')}/{message_ids.get('LCD', '')}"}],
+            [{"text": "قطعات شیایومی", "url": f"https://t.me/c/{chat_id.replace('-100', '')}/{message_ids.get('REDMI_POCO', '')}"}],
+            [{"text": "قطعات هوآوی", "url": f"https://t.me/c/{chat_id.replace('-100', '')}/{message_ids.get('HUAWEI', '')}"}]
+        ]
+    }
+
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    params = {
+        "chat_id": chat_id,
+        "text": final_message,
+        "reply_markup": json.dumps(inline_keyboard)
+    }
+    response = requests.post(url, json=params)
+
+    if response.status_code == 200:
+        logging.info("✅ پیام پایانی همراه با دکمه‌ها ارسال شد!")
+    else:
+        logging.error(f"❌ خطا در ارسال پیام پایانی: {response.json()}")
 
 def main():
     try:
@@ -149,14 +176,26 @@ def main():
 
         if models:
             categorized_data = categorize_data(models)
+            message_ids = {}
             for category, messages in categorized_data.items():
                 if messages:
                     header = create_header(category)
                     footer = create_footer()
                     message = header + "\n".join(messages) + footer
-                    send_telegram_message(message, BOT_TOKEN, CHAT_ID)
-            # ارسال پیام پایانی
-            send_final_message(BOT_TOKEN, CHAT_ID)
+                    response = send_telegram_message(message, BOT_TOKEN, CHAT_ID)
+                    
+                    # ذخیره شناسه پیام
+                    if response and response.status_code == 200:
+                        message_id = response.json().get('result', {}).get('message_id')
+                        if category == "LCD":
+                            message_ids["LCD"] = message_id
+                        elif category == "REDMI_POCO":
+                            message_ids["REDMI_POCO"] = message_id
+                        elif category == "HUAWEI":
+                            message_ids["HUAWEI"] = message_id
+            
+            # ارسال پیام پایانی با دکمه‌های شیشه‌ای
+            send_message_with_buttons(BOT_TOKEN, CHAT_ID, message_ids)
         else:
             logging.warning("❌ داده‌ای برای ارسال وجود ندارد!")
     except Exception as e:
