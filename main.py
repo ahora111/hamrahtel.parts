@@ -126,10 +126,17 @@ def send_telegram_message(message, bot_token, chat_id):
         url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
         params = {"chat_id": chat_id, "text": part, "parse_mode": "MarkdownV2"}
         response = requests.get(url, params=params)
-        if response.json().get('ok') is False:
+        
+        # چاپ وضعیت پاسخ
+        if response.status_code != 200:
+            logging.error(f"❌ خطا در ارسال پیام: {response.status_code} - {response.text}")
+            return
+        elif response.json().get('ok') is False:
             logging.error(f"❌ خطا در ارسال پیام: {response.json()}")
             return
+
     logging.info("✅ پیام ارسال شد!")
+
 
 def main():
     try:
