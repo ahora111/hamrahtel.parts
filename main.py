@@ -181,7 +181,7 @@ def main():
         driver.quit()
 
         # پردازش مدل‌ها و برندها
-        processed_data = [f"{process_model(product[1])} {product[0]}" for product in products]
+        processed_data = [f"{model} {brand}" for brand, model in products]
         print(f"داده‌های پردازش‌شده: {processed_data}")  # پرینت داده‌های پردازش‌شده
 
         update_date = JalaliDate.today().strftime("%Y-%m-%d")
