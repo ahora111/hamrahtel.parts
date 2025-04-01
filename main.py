@@ -51,35 +51,45 @@ def is_number(value):
         return True
     except ValueError:
         return False
+# لیست رنگ‌های ممکن
+colors_list = ["مشکی", "آبی", "قرمز", "سبز", "سفید", "سفید صدفی", "طلایی", "نقره‌ای", "خاکستری", "بنفش", "رزگلد", "زرد", "نارنجی"]
+
+def is_number(value):
+    try:
+        float(value.replace(",", ""))  # بررسی اینکه مقدار، عدد است یا نه
+        return True
+    except ValueError:
+        return False
 
 def extract_product_data(driver):
     product_elements = driver.find_elements(By.CLASS_NAME, 'mantine-Text-root')
     products = []
-    last_valid_product = None  # برای نگه‌داشتن مدل قبلی در صورت دریافت قیمت جداگانه
+    last_valid_product = None  # برای ذخیره آخرین مدل معتبر در صورت دریافت قیمت جداگانه
 
     for product in product_elements:
         name = product.text.strip().replace("تومانءء", "").replace("تومان", "").strip()
         print(f"نام محصول استخراج شده: {name}")  
         parts = name.split()
 
-        if len(parts) >= 2:
-            brand = parts[0]  
-            model = " ".join(parts[1:])  
-        else:
-            brand = "نامشخص"
-            model = name
+        if not parts:
+            continue  # اگر داده‌ای استخراج نشده بود، از این حلقه رد شو
+
+        brand, model = "نامشخص", " ".join(parts)
 
         words = model.split()
         color, price = None, None  
 
-        if words and is_number(words[-1]):  # بررسی قیمت در انتهای مدل
+        # بررسی و استخراج قیمت از انتهای مدل
+        if words and is_number(words[-1]):
             price = words.pop()
 
-        if words and words[-1] in colors_list:  # بررسی رنگ در انتهای مدل
+        # بررسی و استخراج رنگ از انتهای مدل
+        if words and words[-1] in colors_list:
             color = words.pop()
 
         model = " ".join(words)
 
+        # بررسی مقدارهای معتبر قبل از افزودن به لیست
         if model.strip():  
             print(f"برند: {brand}، مدل: {model}، رنگ: {color}، قیمت: {price}")  
             products.append((brand, model, color, price))
@@ -90,9 +100,7 @@ def extract_product_data(driver):
             print(f"📌 افزودن قیمت {price} به {model}")
             products[-1] = (brand, model, color, price)  
 
-    return products[25:]  
-
-
+    return products  
 
 def process_model(model_str):
     print(f"داده‌های پردازش‌شده نهایی: {processed_data}")  # بررسی خروجی
