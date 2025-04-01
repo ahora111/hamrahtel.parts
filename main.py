@@ -114,6 +114,24 @@ def categorize_data(models):
             categorized_data[current_key].append(model)
     return categorized_data
 
+def send_final_message(bot_token, chat_id):
+    final_message = """
+✅ لیست قطعات گوشیای بالا بروز میباشد. تحویل کالا بعد از ثبت خرید، ساعت 11:30 صبح روز بعد می باشد.
+
+✅ شماره کارت جهت واریز
+🔷 شماره شبا : IR970560611828006154229701
+🔷 شماره کارت : 6219861812467917
+🔷 بلو بانک   حسین گرئی
+
+⭕️ حتما رسید واریز به ایدی تلگرام زیر ارسال شود.
+🆔 @lhossein1
+
+✅ شماره تماس ثبت سفارش:
+📞 09371111558
+📞 02833991417
+"""
+    send_telegram_message(final_message, bot_token, chat_id)
+
 def main():
     try:
         driver = get_driver()
@@ -137,6 +155,8 @@ def main():
                     footer = create_footer()
                     message = header + "\n".join(messages) + footer
                     send_telegram_message(message, BOT_TOKEN, CHAT_ID)
+            # ارسال پیام پایانی
+            send_final_message(BOT_TOKEN, CHAT_ID)
         else:
             logging.warning("❌ داده‌ای برای ارسال وجود ندارد!")
     except Exception as e:
