@@ -13,7 +13,7 @@ from persiantools.jdatetime import JalaliDate
 
 # تنظیمات مربوط به تلگرام
 BOT_TOKEN = "8187924543:AAH0jZJvZdpq_34um8R_yCyHQvkorxczXNQ"
-CHAT_ID = "-1002683452872"
+CHAT_ID = "-1002284274669"
 
 # تنظیمات لاگ‌گیری
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -41,21 +41,10 @@ def scroll_page(driver, scroll_pause_time=2):
             break
         last_height = new_height
 
-def extract_product_data(driver, valid_brands):
+def extract_product_data(driver):
     product_elements = driver.find_elements(By.CLASS_NAME, 'mantine-Text-root')
-    brands, models = [], []
-    for product in product_elements:
-        name = product.text.strip().replace("تومانءء", "").replace("تومان", "").replace("نامشخص", "").strip()
-        parts = name.split()
-        brand = parts[0] if len(parts) >= 2 else name
-        model = " ".join(parts[1:]) if len(parts) >= 2 else ""
-        if brand in valid_brands:
-            brands.append(brand)
-            models.append(model)
-        else:
-            models.append(brand + " " + model)
-            brands.append("")
-    return brands[25:], models[25:]
+    models = [product.text.strip() for product in product_elements]
+    return models[25:]
 
 def is_number(model_str):
     try:
@@ -81,44 +70,6 @@ def escape_markdown(text):
 def split_message(message, max_length=4000):
     return [message[i:i+max_length] for i in range(0, len(message), max_length)]
 
-def decorate_line(line):
-    if line.startswith(('🔵', '🟡', '🍏')):
-        return line
-    if "lcd" in line:
-        return f"🔵 {line}"
-    elif "POCO" in line or "Poco" in line or "Redmi" in line:
-        return f"🟡 {line}"
-    elif "huawei" in line:
-        return f"🍏 {line}"
-    else:
-        return line
-
-def categorize_messages(lines):
-    categories = {"🔵": [], "🟡": [], "🍏": [], "🟣": []}
-    current_category = None
-
-    for line in lines:
-        if line.startswith("🔵"):
-            current_category = "🔵"
-        elif line.startswith("🟡"):
-            current_category = "🟡"
-        elif line.startswith("🍏"):
-            current_category = "🍏"
-
-        if current_category:
-            categories[current_category].append(line)
-
-    return categories
-
-def get_header_footer(category, update_date):
-    headers = {
-        "🔵": f"📅 بروزرسانی قیمت در تاریخ {update_date} می باشد\n✅ لیست پخش موبایل اهورا\n⬅️ موجودی سامسونگ ➡️\n",
-        "🟡": f"📅 بروزرسانی قیمت در تاریخ {update_date} می باشد\n✅ لیست پخش موبایل اهورا\n⬅️ موجودی شیایومی ➡️\n",
-        "🍏": f"📅 بروزرسانی قیمت در تاریخ {update_date} می باشد\n✅ لیست پخش موبایل اهورا\n⬅️ موجودی آیفون ➡️\n",
-    }
-    footer = "\n\n☎️ شماره های تماس :\n📞 09371111558\n📞 02833991417"
-    return headers[category], footer
-
 def send_telegram_message(message, bot_token, chat_id):
     message_parts = split_message(message)
     for part in message_parts:
@@ -126,17 +77,10 @@ def send_telegram_message(message, bot_token, chat_id):
         url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
         params = {"chat_id": chat_id, "text": part, "parse_mode": "MarkdownV2"}
         response = requests.get(url, params=params)
-        
-        # چاپ وضعیت پاسخ
-        if response.status_code != 200:
-            logging.error(f"❌ خطا در ارسال پیام: {response.status_code} - {response.text}")
-            return
-        elif response.json().get('ok') is False:
+        if response.json().get('ok') is False:
             logging.error(f"❌ خطا در ارسال پیام: {response.json()}")
             return
-
     logging.info("✅ پیام ارسال شد!")
-
 
 def main():
     try:
@@ -150,29 +94,13 @@ def main():
         logging.info("✅ داده‌ها آماده‌ی استخراج هستند!")
         scroll_page(driver)
 
-        valid_brands = ["Galaxy"]
-        brands, models = extract_product_data(driver, valid_brands)
+        models = extract_product_data(driver)
         driver.quit()
 
-        if brands:
-            processed_data = []
-            for i in range(len(brands)):
-                model_str = process_model(models[i])
-                processed_data.append(f"{model_str} {brands[i]}")
-
-            update_date = JalaliDate.today().strftime("%Y-%m-%d")
-            message_lines = []
-            for row in processed_data:
-                decorated = decorate_line(row)
-                message_lines.append(decorated)
-
-            categories = categorize_messages(message_lines)
-
-            for category, lines in categories.items():
-                if lines:
-                    header, footer = get_header_footer(category, update_date)
-                    message = header + "\n" + "\n".join(lines) + footer
-                    send_telegram_message(message, BOT_TOKEN, CHAT_ID)
+        if models:
+            processed_data = [process_model(model) for model in models]
+            message = "\n".join(processed_data)
+            send_telegram_message(message, BOT_TOKEN, CHAT_ID)
         else:
             logging.warning("❌ داده‌ای برای ارسال وجود ندارد!")
     except Exception as e:
