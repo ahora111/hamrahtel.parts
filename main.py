@@ -48,19 +48,19 @@ def extract_product_data(driver):
 
 def categorize_messages(models):
     categories = {"🟥": [], "🟨": [], "🟦": []}
-    current_category = None
-
+    
     for model in models:
+        line = model
         if "HUAWEI" in model:
-            current_category = "🟥"
+            line = f"🟥 {model}"
+            categories["🟥"].append(line)
         elif "REDMI" in model or "POCO" in model:
-            current_category = "🟨"
+            line = f"🟨 {model}"
+            categories["🟨"].append(line)
         elif "LCD" in model:
-            current_category = "🟦"
-
-        if current_category:
-            categories[current_category].append(f"{current_category} {model}")
-
+            line = f"🟦 {model}"
+            categories["🟦"].append(line)
+    
     return categories
 
 def escape_markdown(text):
