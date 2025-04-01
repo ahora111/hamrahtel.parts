@@ -59,7 +59,7 @@ def extract_product_data(driver):
             model = name
 
         # شناسایی و حذف فقط "نامشخص" (نه مقادیر دیگر مانند مشکی یا قیمت‌ها)
-        if brand != "نامشخص" or model != "نامشخص":
+        if  brand != "نامشخص" or model != "نامشخص":
             print(f"برند: {brand}، مدل: {model}")  # پرینت برند و مدل برای اطمینان
             products.append((brand, model))
         else:
