@@ -56,7 +56,7 @@ def extract_parts_data(driver):
     return parts[20:]  # حذف آیتم‌های نامربوط احتمالی
 
 def send_telegram_message(message, bot_token, chat_id):
-    """ارسال پیام به تلگرام"""
+    """ارسال پیام به تلگرام و بررسی پاسخ API"""
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     params = {
         "chat_id": chat_id,
@@ -64,7 +64,13 @@ def send_telegram_message(message, bot_token, chat_id):
         "parse_mode": "MarkdownV2"
     }
     response = requests.post(url, json=params)
-    return response.json()
+    
+    # ✅ چاپ لاگ دقیق از پاسخ تلگرام
+    response_data = response.json()
+    logging.info(f"📩 پاسخ تلگرام: {response_data}")  
+   
+    return response_data
+
 
 def main():
     try:
