@@ -49,19 +49,20 @@ def extract_product_data(driver):
 def categorize_messages(models):
     categories = {"🟥": [], "🟨": [], "🟦": [], "general": []}
     
+    # دسته‌بندی محصولات بر اساس کلیدواژه‌ها
     for model in models:
         line = model
         if "HUAWEI" in model:
-            line = f"🟥 {model}"
-            categories["🟥"].append(line)
+            line = f"🟥 {model}"  # اضافه کردن ایموجی قبل از مدل
+            categories["🟥"].append(line)  # اضافه کردن به لیست مخصوص ایموجی HUAWEI
         elif "REDMI" in model or "POCO" in model:
-            line = f"🟨 {model}"
-            categories["🟨"].append(line)
+            line = f"🟨 {model}"  # اضافه کردن ایموجی قبل از مدل
+            categories["🟨"].append(line)  # اضافه کردن به لیست مخصوص ایموجی REDMI و POCO
         elif "LCD" in model:
-            line = f"🟦 {model}"
-            categories["🟦"].append(line)
+            line = f"🟦 {model}"  # اضافه کردن ایموجی قبل از مدل
+            categories["🟦"].append(line)  # اضافه کردن به لیست مخصوص ایموجی LCD
         else:
-            categories["general"].append(line)
+            categories["general"].append(line)  # اگر هیچ کلمه کلیدی نداشت، به دسته عمومی اضافه می‌کنیم
     
     return categories
 
@@ -98,9 +99,10 @@ def main():
 
         if models:
             categorized_data = categorize_messages(models)
+            # ارسال پیام‌ها برای هر دسته‌بندی
             for category, lines in categorized_data.items():
-                if lines:
-                    message = "\n".join(lines)  # همه خطوط همان دسته رو به هم وصل می‌کنیم
+                if lines:  # اگر در دسته‌بندی داده‌ای وجود داشته باشد
+                    message = "\n".join(lines)  # تمامی خطوط مربوط به آن دسته را به هم می‌چسبانیم
                     send_telegram_message(message, BOT_TOKEN, CHAT_ID)
         else:
             logging.warning("❌ داده‌ای برای ارسال وجود ندارد!")
