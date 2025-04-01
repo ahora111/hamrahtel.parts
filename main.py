@@ -175,7 +175,7 @@ def main():
         logging.info("✅ داده‌ها آماده‌ی استخراج هستند!")
         scroll_page(driver)
         
-        valid_brands = ["Galaxy", "POCO", "Redmi", "iPhone", "NOKIA", "Honor", "Huawei" ]
+        valid_brands = ["Galaxy", "POCO", "Redmi", "lcd", "Honor", "Huawei" ]
         brands, models = extract_product_data(driver, valid_brands)
         
         driver.quit()
