@@ -63,13 +63,14 @@ def escape_markdown(text):
     return text
 import re
 
-def clean_special_characters(text):
-    """حذف تمام کاراکترهای خاص از متن"""
-    return re.sub(r'[^\w\s]', '', text)
+def escape_special_characters_in_html(text):
+    """فرار دادن کاراکتر '-' در HTML"""
+    text = text.replace("-", "\\-")  # فرار دادن کاراکتر '-'
+    return text
 
 def send_telegram_message(message, bot_token, chat_id):
-    """ارسال پیام به تلگرام با پاکسازی کاراکترهای خاص"""
-    message = clean_special_characters(message)  # حذف کاراکترهای خاص
+    """ارسال پیام به تلگرام با فرار دادن کاراکترهای خاص"""
+    message = escape_special_characters_in_html(message)  # فرار دادن کاراکتر '-'
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     params = {
         "chat_id": chat_id,
@@ -83,6 +84,7 @@ def send_telegram_message(message, bot_token, chat_id):
     logging.info(f"📩 پاسخ تلگرام: {response_data}")  
     
     return response_data
+
 
 
 
