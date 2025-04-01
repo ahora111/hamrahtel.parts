@@ -55,8 +55,16 @@ def extract_parts_data(driver):
 
     return parts[20:]  # حذف آیتم‌های نامربوط احتمالی
 
+def escape_markdown(text):
+    """فرار دادن کاراکترهای خاص برای MarkdownV2"""
+    escape_chars = ['\\', '(', ')', '[', ']', '~', '*', '_', '-', '+', '>', '#', '.', '!', '|']
+    for char in escape_chars:
+        text = text.replace(char, '\\' + char)
+    return text
+
 def send_telegram_message(message, bot_token, chat_id):
     """ارسال پیام به تلگرام و بررسی پاسخ API"""
+    message = escape_markdown(message)  # فرار دادن کاراکترهای خاص
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     params = {
         "chat_id": chat_id,
@@ -68,8 +76,9 @@ def send_telegram_message(message, bot_token, chat_id):
     # ✅ چاپ لاگ دقیق از پاسخ تلگرام
     response_data = response.json()
     logging.info(f"📩 پاسخ تلگرام: {response_data}")  
-   
+    
     return response_data
+
 
 
 def main():
