@@ -48,6 +48,7 @@ def extract_product_data(driver):
 
     for product in product_elements:
         name = product.text.strip().replace("تومانءء", "").replace("تومان", "").replace("نامشخص", "").strip()
+        print(f"نام محصول استخراج شده: {name}")  # پرینت نام محصول برای بررسی
         parts = name.split()
         
         if len(parts) >= 2:
@@ -56,6 +57,8 @@ def extract_product_data(driver):
         else:
             brand = "نامشخص"
             model = name
+
+        print(f"برند: {brand}، مدل: {model}")  # پرینت برند و مدل برای اطمینان
 
         products.append((brand, model))
 
@@ -71,11 +74,17 @@ def is_number(model_str):
 
 def process_model(model_str):
     model_str = model_str.replace("٬", "").replace(",", "").strip()
+    print(f"مدل پردازش‌شده اولیه: {model_str}")  # پرینت مقدار اولیه
     if is_number(model_str):
         model_value = float(model_str)
         model_value_with_increase = model_value * 1.015
-        return f"{model_value_with_increase:,.0f}"
+        print(f"قیمت نهایی با افزایش: {model_value_with_increase}")  # پرینت قیمت نهایی
+        return f"{model_value_with_increase:,.0f} تومان"
     return model_str
+
+
+
+
 
 def escape_markdown(text):
     escape_chars = ['\\', '(', ')', '[', ']', '~', '*', '_', '-', '+', '>', '#', '.', '!', '|']
@@ -163,10 +172,13 @@ def main():
 
         valid_brands = ["Galaxy", "POCO", "Redmi", "iPhone", "NOKIA", "Honor", "huawei"]
         products = extract_product_data(driver)
+        print(f"محصولات استخراج‌شده: {products}")  # پرینت تمام محصولات استخراج‌شده
+
         driver.quit()
 
         # پردازش مدل‌ها و برندها
         processed_data = [f"{process_model(product[1])} {product[0]}" for product in products]
+        print(f"داده‌های پردازش‌شده: {processed_data}")  # پرینت داده‌های پردازش‌شده
 
         update_date = JalaliDate.today().strftime("%Y-%m-%d")
         message_lines = [decorate_line(row) for row in processed_data]
