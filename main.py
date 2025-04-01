@@ -3,6 +3,7 @@ import os
 import time
 import requests
 import logging
+import threading
 import json
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -11,9 +12,11 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from persiantools.jdatetime import JalaliDate
 
+# تنظیمات مربوط به تلگرام
 BOT_TOKEN = "8187924543:AAH0jZJvZdpq_34um8R_yCyHQvkorxczXNQ"
-CHAT_ID = "-1002683452872"
+CHAT_ID = "-1002284274669"
 
+# تنظیمات لاگ‌گیری
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 def get_driver():
@@ -39,7 +42,6 @@ def scroll_page(driver, scroll_pause_time=2):
             break
         last_height = new_height
 
-
 def extract_product_data(driver, valid_brands):
     product_elements = driver.find_elements(By.CLASS_NAME, 'mantine-Text-root')
     brands, models = [], []
@@ -54,27 +56,22 @@ def extract_product_data(driver, valid_brands):
         else:
             models.append(brand + " " + model)
             brands.append("")
-
     return brands[25:], models[25:]
 
-import re
-
 def is_number(model_str):
-    """ بررسی می‌کند که آیا رشته شامل عدد معتبر است یا نه. """
-    model_str = model_str.replace("٬", "").replace(",", "").strip()
-    return bool(re.match(r"^\d+(\.\d+)?$", model_str))
+    try:
+        float(model_str.replace(",", ""))
+        return True
+    except ValueError:
+        return False
 
 def process_model(model_str):
-    """ مقدار عددی را ۱.۵ درصد افزایش می‌دهد، در غیر این‌صورت همان مقدار را برمی‌گرداند. """
     model_str = model_str.replace("٬", "").replace(",", "").strip()
-
     if is_number(model_str):
         model_value = float(model_str)
-        model_value_with_increase = model_value * 1.015  # افزایش ۱.۵ درصدی
-        return f"{model_value_with_increase:,.0f}".replace(",", "٬")  # نمایش صحیح با جداکننده هزارگان
-
-    return model_str  # اگر عدد نبود، همان مقدار را برمی‌گرداند
-
+        model_value_with_increase = model_value * 1.015
+        return f"{model_value_with_increase:,.0f}"
+    return model_str
 
 def escape_markdown(text):
     escape_chars = ['\\', '(', ')', '[', ']', '~', '*', '_', '-', '+', '>', '#', '.', '!', '|']
@@ -86,44 +83,44 @@ def split_message(message, max_length=4000):
     return [message[i:i+max_length] for i in range(0, len(message), max_length)]
 
 def decorate_line(line):
-    if line.startswith(('🟦', '🟨', '🟥')):
+    if line.startswith(('🔵', '🟡', '🍏', '🟣')):
         return line
-    elif "huawei" in line:
-        return f"🟥 {line}"
-    elif "lcd" in line:
-        return f"🟦 {line}"
+    if "Galaxy" in line:
+        return f"🔵 {line}"
     elif "POCO" in line or "Poco" in line or "Redmi" in line:
-        return f"🟨 {line}"
+        return f"🟡 {line}"
+    elif "iPhone" in line:
+        return f"🍏 {line}"
+    elif any(keyword in line for keyword in ["RAM", "FA", "Classic"]):
+        return f"🟣 {line}"
     else:
         return line
 
-
-
-
-
-
 def categorize_messages(lines):
-    categories = {"🟦": [], "🟨": [], "🟥": []} 
+    categories = {"🔵": [], "🟡": [], "🍏": [], "🟣": []}
     current_category = None
 
     for line in lines:
-        if line.startswith("🟦"):
-            current_category = "🟦"
-        elif line.startswith("🟨"):
-            current_category = "🟨"
-        elif line.startswith("🟥"):
-            current_category = "🟥"
+        if line.startswith("🔵"):
+            current_category = "🔵"
+        elif line.startswith("🟡"):
+            current_category = "🟡"
+        elif line.startswith("🍏"):
+            current_category = "🍏"
+        elif line.startswith("🟣"):
+            current_category = "🟣"
 
         if current_category:
-            categories[current_category].append(f"{line}")
+            categories[current_category].append(line)
 
     return categories
 
 def get_header_footer(category, update_date):
     headers = {
-        "🟦": f"📅 بروزرسانی قیمت در تاریخ {update_date} می باشد\n✅ لیست پخش قطعات موبایل اهورا\n⬅️ موجودی قطعات سامسونگ ➡️\n",
-        "🟨": f"📅 بروزرسانی قیمت در تاریخ {update_date} می باشد\n✅ لیست پخش قطعات موبایل اهورا\n⬅️ موجودی قطعات شیایومی ➡️\n",
-        "🟥": f"📅 بروزرسانی قیمت در تاریخ {update_date} می باشد\n✅ لیست پخش قطعات موبایل اهورا\n⬅️ موجودی قطعات هوآوی ➡️\n",
+        "🔵": f"📅 بروزرسانی قیمت در تاریخ {update_date} می باشد\n✅ لیست پخش موبایل اهورا\n⬅️ موجودی سامسونگ ➡️\n",
+        "🟡": f"📅 بروزرسانی قیمت در تاریخ {update_date} می باشد\n✅ لیست پخش موبایل اهورا\n⬅️ موجودی شیایومی ➡️\n",
+        "🍏": f"📅 بروزرسانی قیمت در تاریخ {update_date} می باشد\n✅ لیست پخش موبایل اهورا\n⬅️ موجودی آیفون ➡️\n",
+        "🟣": f"📅 بروزرسانی قیمت در تاریخ {update_date} می باشد\n✅ لیست پخش موبایل اهورا\n⬅️ موجودی متفرقه ➡️\n",
     }
     footer = "\n\n☎️ شماره های تماس :\n📞 09371111558\n📞 02833991417"
     return headers[category], footer
@@ -170,21 +167,19 @@ def main():
             logging.error("❌ نمی‌توان WebDriver را ایجاد کرد.")
             return
         
-        driver.get('https://hamrahtel.com/quick-checkout?category=mobile-parts')
+        driver.get('https://hamrahtel.com/quick-checkout')
         WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.CLASS_NAME, 'mantine-Text-root')))
         logging.info("✅ داده‌ها آماده‌ی استخراج هستند!")
         scroll_page(driver)
-        
-        valid_brands = ["Galaxy", "POCO", "Redmi", "lcd", "Honor", "Huawei" ]
+
+        valid_brands = ["Galaxy", "POCO", "Redmi", "iPhone", "Redtone", "VOCAL", "TCL", "NOKIA", "Honor", "Huawei", "GLX", "+Otel"]
         brands, models = extract_product_data(driver, valid_brands)
-        
         driver.quit()
 
         samsung_message_id = None  # ذخیره message_id سامسونگ
         xiaomi_message_id = None  # ذخیره message_id شیایومی
-        huawei_message_id = None  # ذخیره message_id هوآوی
+        iphone_message_id = None  # ذخیره message_id آیفون
 
-        
         if brands:
             processed_data = []
             for i in range(len(brands)):
@@ -205,12 +200,12 @@ def main():
                     message = header + "\n" + "\n".join(lines) + footer
                     msg_id = send_telegram_message(message, BOT_TOKEN, CHAT_ID)
 
-                    if category == "🟦":  # ذخیره message_id سامسونگ
+                    if category == "🔵":  # ذخیره message_id سامسونگ
                         samsung_message_id = msg_id
-                    elif category == "🟨":  # ذخیره message_id شیایومی
+                    elif category == "🟡":  # ذخیره message_id شیایومی
                         xiaomi_message_id = msg_id
-                    elif category == "🟥":  # ذخیره message_id آیفون
-                        huawei_message_id = msg_id
+                    elif category == "🍏":  # ذخیره message_id آیفون
+                        iphone_message_id = msg_id
 
         else:
             logging.warning("❌ داده‌ای برای ارسال وجود ندارد!")
@@ -234,13 +229,13 @@ def main():
         )
 
         button_markup = {"inline_keyboard": []}
-        if samsung_message_id:
-            button_markup["inline_keyboard"].append([{"text": "📱 لیست سامسونگ", "url": f"https://t.me/c/{CHAT_ID.replace('-100', '')}/{samsung_message_id}"}])
+        button_markup["inline_keyboard"].append([{"text": "📱 لیست سامسونگ", "url": f"https://t.me/c/{CHAT_ID.replace('-100', '')}/{samsung_message_id}"}])
+        
         if xiaomi_message_id:
             button_markup["inline_keyboard"].append([{"text": "📱 لیست شیایومی", "url": f"https://t.me/c/{CHAT_ID.replace('-100', '')}/{xiaomi_message_id}"}])
-        if huawei_message_id:
-            button_markup["inline_keyboard"].append([{"text": "📱 لیست آیفون", "url": f"https://t.me/c/{CHAT_ID.replace('-100', '')}/{huawei_message_id}"}])
-    
+        if iphone_message_id:
+            button_markup["inline_keyboard"].append([{"text": "📱 لیست آیفون", "url": f"https://t.me/c/{CHAT_ID.replace('-100', '')}/{iphone_message_id}"}])
+
         send_telegram_message(final_message, BOT_TOKEN, CHAT_ID, reply_markup=button_markup)
 
     except Exception as e:
@@ -248,3 +243,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
