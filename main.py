@@ -46,25 +46,25 @@ def extract_product_data(driver):
     models = [product.text.strip().replace("تومانءء", "") for product in product_elements]
     return models[25:]
 
+# دسته‌بندی پیام‌ها بر اساس کلمات کلیدی
 def categorize_messages(models):
-    categories = {"🟥": [], "🟨": [], "🟦": [], "general": []}
+    categorized_messages = {"🟥": [], "🟨": [], "🟦": []}  # دیکشنری برای دسته‌بندی پیام‌ها
     
-    # دسته‌بندی محصولات بر اساس کلیدواژه‌ها
     for model in models:
-        line = model
         if "HUAWEI" in model:
-            line = f"🟥 {model}"  # اضافه کردن ایموجی قبل از مدل
-            categories["🟥"].append(line)  # اضافه کردن به لیست مخصوص ایموجی HUAWEI
+            categorized_messages["🟥"].append(model)
         elif "REDMI" in model or "POCO" in model:
-            line = f"🟨 {model}"  # اضافه کردن ایموجی قبل از مدل
-            categories["🟨"].append(line)  # اضافه کردن به لیست مخصوص ایموجی REDMI و POCO
+            categorized_messages["🟨"].append(model)
         elif "LCD" in model:
-            line = f"🟦 {model}"  # اضافه کردن ایموجی قبل از مدل
-            categories["🟦"].append(line)  # اضافه کردن به لیست مخصوص ایموجی LCD
-        else:
-            categories["general"].append(line)  # اگر هیچ کلمه کلیدی نداشت، به دسته عمومی اضافه می‌کنیم
+            categorized_messages["🟦"].append(model)
     
-    return categories
+    # ساخت پیام‌ها برای ارسال
+    final_messages = []
+    for emoji, messages in categorized_messages.items():
+        if messages:  # اگر پیام‌های مربوط به این دسته وجود داشت
+            final_messages.append(f"{emoji} " + "\n".join(messages))
+    
+    return final_messages
 
 def escape_markdown(text):
     escape_chars = ['\\', '(', ')', '[', ']', '~', '*', '_', '-', '+', '>', '#', '.', '!', '|']
@@ -98,12 +98,9 @@ def main():
         driver.quit()
 
         if models:
-            categorized_data = categorize_messages(models)
-            # ارسال پیام‌ها برای هر دسته‌بندی
-            for category, lines in categorized_data.items():
-                if lines:  # اگر در دسته‌بندی داده‌ای وجود داشته باشد
-                    message = "\n".join(lines)  # تمامی خطوط مربوط به آن دسته را به هم می‌چسبانیم
-                    send_telegram_message(message, BOT_TOKEN, CHAT_ID)
+            categorized_messages = categorize_messages(models)
+            for message in categorized_messages:
+                send_telegram_message(message, BOT_TOKEN, CHAT_ID)
         else:
             logging.warning("❌ داده‌ای برای ارسال وجود ندارد!")
     except Exception as e:
