@@ -46,41 +46,31 @@ def extract_product_data(driver):
     models = [product.text.strip().replace("تومانءء", "") for product in product_elements]
     return models[25:]
 
-def is_number(model_str):
-    try:
-        float(model_str.replace(",", ""))
-        return True
-    except ValueError:
-        return False
+def categorize_messages(models):
+    categories = {"🟥": [], "🟨": [], "🟦": []}
+    current_category = None
 
-def process_model(model_str):
-    model_str = model_str.replace("٬", "").replace(",", "").strip()
-    if is_number(model_str):
-        model_value = float(model_str)
-        model_value_with_increase = model_value * 1.015
-        return f"{model_value_with_increase:,.0f}"
-    return model_str
+    for model in models:
+        if "HUAWEI" in model:
+            current_category = "🟥"
+        elif "REDMI" in model or "POCO" in model:
+            current_category = "🟨"
+        elif "LCD" in model:
+            current_category = "🟦"
 
-def escape_markdown(text):
-    escape_chars = ['\\', '(', ')', '[', ']', '~', '*', '_', '-', '+', '>', '#', '.', '!', '|']
-    for char in escape_chars:
-        text = text.replace(char, '\\' + char)
-    return text
+        if current_category:
+            categories[current_category].append(f"{current_category} {model}")
 
-def split_message(message, max_length=4000):
-    return [message[i:i+max_length] for i in range(0, len(message), max_length)]
+    return categories
 
 def send_telegram_message(message, bot_token, chat_id):
-    message_parts = split_message(message)
-    for part in message_parts:
-        part = escape_markdown(part)
-        url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-        params = {"chat_id": chat_id, "text": part, "parse_mode": "MarkdownV2"}
-        response = requests.get(url, params=params)
-        if response.json().get('ok') is False:
-            logging.error(f"❌ خطا در ارسال پیام: {response.json()}")
-            return
-    logging.info("✅ پیام ارسال شد!")
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    params = {"chat_id": chat_id, "text": message, "parse_mode": "MarkdownV2"}
+    response = requests.get(url, params=params)
+    if response.json().get('ok') is False:
+        logging.error(f"❌ خطا در ارسال پیام: {response.json()}")
+    else:
+        logging.info("✅ پیام ارسال شد!")
 
 def main():
     try:
@@ -98,9 +88,11 @@ def main():
         driver.quit()
 
         if models:
-            processed_data = [process_model(model) for model in models]
-            message = "\n".join(processed_data)
-            send_telegram_message(message, BOT_TOKEN, CHAT_ID)
+            categorized_data = categorize_messages(models)
+            for category, lines in categorized_data.items():
+                if lines:
+                    message = "\n".join(lines)
+                    send_telegram_message(message, BOT_TOKEN, CHAT_ID)
         else:
             logging.warning("❌ داده‌ای برای ارسال وجود ندارد!")
     except Exception as e:
