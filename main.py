@@ -41,8 +41,8 @@ def scroll_page(driver, scroll_pause_time=2):
         if new_height == last_height:
             break
         last_height = new_height
-
-# لیست رنگ‌های احتمالی
+        
+# لیست رنگ‌های ممکن
 colors_list = ["مشکی", "آبی", "قرمز", "سبز", "سفید", "سفید صدفی", "طلایی", "نقره‌ای", "خاکستری", "بنفش", "رزگلد", "زرد", "نارنجی"]
 
 def is_number(value):
@@ -54,6 +54,9 @@ def is_number(value):
 # لیست رنگ‌های ممکن
 colors_list = ["مشکی", "آبی", "قرمز", "سبز", "سفید", "سفید صدفی", "طلایی", "نقره‌ای", "خاکستری", "بنفش", "رزگلد", "زرد", "نارنجی"]
 
+# دسته‌بندی‌های ناخواسته که نباید پردازش شوند
+invalid_categories = ["موبایل", "قطعات موبایل", "لپ‌تاپ", "تبلت", "شارژر موبایل", "کیف و قاب", "هدفون و هندزفری", "ساعت و مچ‌بند", "کابل و تبدیل", "جستجو در مدل‌ها"]
+
 def is_number(value):
     try:
         float(value.replace(",", ""))  # بررسی اینکه مقدار، عدد است یا نه
@@ -64,15 +67,16 @@ def is_number(value):
 def extract_product_data(driver):
     product_elements = driver.find_elements(By.CLASS_NAME, 'mantine-Text-root')
     products = []
-    last_valid_product = None  # برای ذخیره آخرین مدل معتبر در صورت دریافت قیمت جداگانه
+    last_valid_product = None  # ذخیره آخرین مدل معتبر برای تطبیق قیمت
 
     for product in product_elements:
         name = product.text.strip().replace("تومانءء", "").replace("تومان", "").strip()
         print(f"نام محصول استخراج شده: {name}")  
         parts = name.split()
 
-        if not parts:
-            continue  # اگر داده‌ای استخراج نشده بود، از این حلقه رد شو
+        if not parts or name in invalid_categories:
+            print(f"⚠️ داده نامعتبر حذف شد: {name}")
+            continue  # حذف دسته‌بندی‌های نامعتبر
 
         brand, model = "نامشخص", " ".join(parts)
 
@@ -91,7 +95,7 @@ def extract_product_data(driver):
 
         # بررسی مقدارهای معتبر قبل از افزودن به لیست
         if model.strip():  
-            print(f"برند: {brand}، مدل: {model}، رنگ: {color}، قیمت: {price}")  
+            print(f"✅ برند: {brand}، مدل: {model}، رنگ: {color}، قیمت: {price}")  
             products.append((brand, model, color, price))
             last_valid_product = (brand, model, color, price)  # ذخیره مدل معتبر
         elif price and last_valid_product:  
@@ -101,6 +105,7 @@ def extract_product_data(driver):
             products[-1] = (brand, model, color, price)  
 
     return products  
+
 
 def process_model(model_str):
     print(f"داده‌های پردازش‌شده نهایی: {processed_data}")  # بررسی خروجی
