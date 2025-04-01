@@ -161,7 +161,7 @@ def main():
         scroll_page(driver)
 
         valid_brands = ["Galaxy", "POCO", "Redmi", "iPhone", "NOKIA", "Honor", "huawei"]
-        brands, models = extract_product_data(driver, valid_brands)
+        products = extract_product_data(driver)
         driver.quit()
 
         processed_data = [f"{process_model(models[i])} {brands[i]}" for i in range(len(brands))]
