@@ -56,41 +56,39 @@ def is_number(value):
         return False
 
 def extract_product_data(driver):
-    """استخراج اطلاعات محصولات از سایت"""
+    """استخراج تمام مدل‌ها بدون حذف هیچ موردی"""
     product_elements = driver.find_elements(By.CLASS_NAME, 'mantine-Text-root')
     products = []
-    last_valid_product = None
 
     for product in product_elements:
         name = product.text.strip().replace("تومانءء", "").replace("تومان", "").strip()
-        if not name or name in INVALID_CATEGORIES:
-            continue  
+        
+        # اگر متن خالی بود، رد شود
+        if not name:
+            continue
 
         words = name.split()
-        color, price = None, None  
+        color, price = "نامشخص", "نامشخص"
 
-        # تشخیص قیمت
+        # تشخیص قیمت (آخرین عدد در متن)
         for i in range(len(words) - 1, -1, -1):
             if is_number(words[i]):
                 price = words.pop(i)
                 break
 
-        # تشخیص رنگ
+        # تشخیص رنگ (یکی از رنگ‌های موجود در لیست)
         for i in range(len(words) - 1, -1, -1):
             if words[i] in COLORS:
                 color = words.pop(i)
                 break
 
-        model = " ".join(words)
+        model = " ".join(words) if words else "نامشخص"
 
-        if model:
-            products.append((model, color, price))
-            last_valid_product = (model, color, price)
-        elif price and last_valid_product:
-            model, color, _ = last_valid_product
-            products[-1] = (model, color, price)
+        # افزودن مدل به لیست، حتی اگر اطلاعات ناقص باشند
+        products.append((model, color, price))
 
     return products
+
 
 def escape_markdown(text):
     """فرار دادن کاراکترهای خاص برای Markdown"""
