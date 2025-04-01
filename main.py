@@ -39,6 +39,9 @@ def scroll_page(driver, scroll_pause_time=2):
             break
         last_height = new_height
 
+valid_brands = ["Samsung", "Xiaomi", "Huawei", "iPhone", "Poco", "Redmi"]  # برندهای معتبر
+valid_brands, valid_models = extract_product_data(driver, valid_brands)
+
 def extract_product_data(driver, valid_brands):
     product_elements = driver.find_elements(By.CLASS_NAME, 'mantine-Text-root')
     brands, models = [], []
@@ -174,8 +177,7 @@ def main():
         logging.info("✅ داده‌ها آماده‌ی استخراج هستند!")
         scroll_page(driver)
         
-        valid_brands = ["Samsung", "Xiaomi", "Huawei", "iPhone", "Poco", "Redmi"]  # برندهای معتبر
-        valid_brands, valid_models = extract_product_data(driver, valid_brands)
+
 
         valid_brands, valid_models = extract_product_data(driver, valid_brands)
         brands.extend(valid_brands)
