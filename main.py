@@ -181,8 +181,9 @@ def main():
         driver.quit()
 
         # پردازش مدل‌ها و برندها
-        processed_data = [f"{model} {brand}" for brand, model in products]
-        print(f"داده‌های پردازش‌شده: {processed_data}")  # پرینت داده‌های پردازش‌شده
+        processed_data = [f"{brand} {model}" for brand, model in products if model.strip()]
+        print(f"داده‌های پردازش‌شده نهایی: {processed_data}")
+
 
         update_date = JalaliDate.today().strftime("%Y-%m-%d")
         message_lines = [decorate_line(row) for row in processed_data]
