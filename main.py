@@ -69,10 +69,17 @@ def extract_product_data(driver):
         words = name.split()
         color, price = None, None  
 
-        if words and is_number(words[-1]):
-            price = words.pop()
-        if words and words[-1] in COLORS:
-            color = words.pop()
+        # تشخیص قیمت
+        for i in range(len(words) - 1, -1, -1):
+            if is_number(words[i]):
+                price = words.pop(i)
+                break
+
+        # تشخیص رنگ
+        for i in range(len(words) - 1, -1, -1):
+            if words[i] in COLORS:
+                color = words.pop(i)
+                break
 
         model = " ".join(words)
 
@@ -83,7 +90,7 @@ def extract_product_data(driver):
             model, color, _ = last_valid_product
             products[-1] = (model, color, price)
 
-    return products  
+    return products
 
 def escape_markdown(text):
     """فرار دادن کاراکترهای خاص برای Markdown"""
