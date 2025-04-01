@@ -47,7 +47,7 @@ def extract_product_data(driver):
     products = []
 
     for product in product_elements:
-        name = product.text.strip().replace("تومانءء", "").replace("تومان", "").replace("نامشخص", "").strip()
+        name = product.text.strip().replace("تومانءء", "").replace("تومان", "").strip()
         print(f"نام محصول استخراج شده: {name}")  # پرینت نام محصول برای بررسی
         parts = name.split()
         
@@ -58,6 +58,16 @@ def extract_product_data(driver):
             brand = "نامشخص"
             model = name
 
+        # شناسایی و حذف فقط "نامشخص" (نه مقادیر دیگر مانند مشکی یا قیمت‌ها)
+        if brand != "نامشخص" or model != "نامشخص":
+            print(f"برند: {brand}، مدل: {model}")  # پرینت برند و مدل برای اطمینان
+            products.append((brand, model))
+        else:
+            print(f"خطا: اطلاعات نامعتبر شناسایی شد، {name}")
+
+    return products[25:]  # حذف موارد اضافی در ابتدای لیست
+
+    
         print(f"برند: {brand}، مدل: {model}")  # پرینت برند و مدل برای اطمینان
 
         products.append((brand, model))
@@ -73,6 +83,7 @@ def is_number(model_str):
         return False
 
 def process_model(model_str):
+    print(f"داده‌های پردازش‌شده نهایی: {processed_data}")  # بررسی خروجی
     model_str = model_str.replace("٬", "").replace(",", "").strip()
     print(f"مدل پردازش‌شده اولیه: {model_str}")  # پرینت مقدار اولیه
     if is_number(model_str):
