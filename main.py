@@ -3,15 +3,13 @@ import os
 import time
 import requests
 import logging
-import threading
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from persiantools.jdatetime import JalaliDate
 
-# تنظیمات مربوط به تلگرام
+# تنظیمات تلگرام
 BOT_TOKEN = "8187924543:AAH0jZJvZdpq_34um8R_yCyHQvkorxczXNQ"
 CHAT_ID = "-1002683452872"
 
@@ -46,40 +44,20 @@ def extract_product_data(driver):
     models = [product.text.strip().replace("تومانءء", "") for product in product_elements]
     return models[25:]
 
-# دسته‌بندی پیام‌ها بر اساس کلمات کلیدی
-def categorize_messages(models):
-    categorized_messages = []  # لیست نهایی برای پیام‌ها
-    current_category = ""  # دسته‌بندی فعلی
-    current_lines = []  # لیست سطرهای مرتبط با دسته فعلی
-    today_date = JalaliDate.today().strftime("%Y/%m/%d")
-    
-    for model in models:
-        new_category = ""
-        header = ""
-        if "HUAWEI" in model:
-            new_category = "🟥"
-            header = f"📅 بروزرسانی قیمت در تاریخ {today_date} می‌باشد\n✅ لیست پخش قطعات موبایل اهورا\n⬅️ موجودی قطعات هوآوی ➡️\n"
-        elif "REDMI" in model or "POCO" in model:
-            new_category = "🟨"
-            header = f"📅 بروزرسانی قیمت در تاریخ {today_date} می‌باشد\n✅ لیست پخش قطعات موبایل اهورا\n⬅️ موجودی قطعات شیائومی ➡️\n"
-        elif "LCD" in model:
-            new_category = "🟦"
-            header = f"📅 بروزرسانی قیمت در تاریخ {today_date} می‌باشد\n✅ لیست پخش قطعات موبایل اهورا\n⬅️ موجودی قطعات سامسونگ ➡️\n"
-        
-        # اگر دسته‌بندی جدید است، پیام قبلی را ذخیره کن و یک دسته جدید شروع کن
-        if new_category:
-            if current_lines:  # پیام دسته قبلی را ذخیره کن
-                categorized_messages.append("\n".join(current_lines))
-            current_category = new_category
-            current_lines = [header, f"{current_category} {model}"]
-        else:
-            current_lines.append(model)  # اضافه کردن خطوط دیگر به همان دسته‌بندی
-    
-    # ذخیره آخرین دسته‌بندی
-    if current_lines:
-        categorized_messages.append("\n".join(current_lines))
-    
-    return categorized_messages
+def is_number(model_str):
+    try:
+        float(model_str.replace(",", ""))
+        return True
+    except ValueError:
+        return False
+
+def process_model(model_str):
+    model_str = model_str.replace("٬", "").replace(",", "").strip()
+    if is_number(model_str):
+        model_value = float(model_str)
+        model_value_with_increase = model_value * 1.015
+        return f"{model_value_with_increase:,.0f}"
+    return model_str
 
 def escape_markdown(text):
     escape_chars = ['\\', '(', ')', '[', ']', '~', '*', '_', '-', '+', '>', '#', '.', '!', '|']
@@ -87,15 +65,49 @@ def escape_markdown(text):
         text = text.replace(char, '\\' + char)
     return text
 
+def split_message(message, max_length=4000):
+    return [message[i:i+max_length] for i in range(0, len(message), max_length)]
+
 def send_telegram_message(message, bot_token, chat_id):
-    message = escape_markdown(message)
-    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-    params = {"chat_id": chat_id, "text": message, "parse_mode": "MarkdownV2"}
-    response = requests.get(url, params=params)
-    if response.json().get('ok') is False:
-        logging.error(f"❌ خطا در ارسال پیام: {response.json()}")
-    else:
-        logging.info("✅ پیام ارسال شد!")
+    message_parts = split_message(message)
+    for part in message_parts:
+        part = escape_markdown(part)
+        url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+        params = {"chat_id": chat_id, "text": part, "parse_mode": "MarkdownV2"}
+        response = requests.get(url, params=params)
+        if response.json().get('ok') is False:
+            logging.error(f"❌ خطا در ارسال پیام: {response.json()}")
+            return
+    logging.info("✅ پیام ارسال شد!")
+
+from persiantools.jdatetime import JalaliDate
+
+def create_header(category):
+    today_date = JalaliDate.today().strftime('%Y/%m/%d')
+    if category == "LCD":
+        return f"📅 بروزرسانی قیمت در تاریخ {today_date} می باشد\n✅ لیست پخش قطعات موبایل اهورا\n⬅️ موجودی قطعات سامسونگ ➡️\n\n"
+    elif category == "REDMI_POCO":
+        return f"📅 بروزرسانی قیمت در تاریخ {today_date} می باشد\n✅ لیست پخش قطعات موبایل اهورا\n⬅️ موجودی قطعات شیایومی ➡️\n\n"
+    elif category == "HUAWEI":
+        return f"📅 بروزرسانی قیمت در تاریخ {today_date} می باشد\n✅ لیست پخش قطعات موبایل اهورا\n⬅️ موجودی قطعات هوآوی ➡️\n\n"
+    return ""
+
+def categorize_data(models):
+    categorized_data = {"HUAWEI": [], "REDMI_POCO": [], "LCD": []}
+    current_key = None
+    for model in models:
+        if "HUAWEI" in model:
+            current_key = "HUAWEI"
+            categorized_data[current_key].append(f"🟥 {model}")
+        elif "REDMI" in model or "poco" in model:
+            current_key = "REDMI_POCO"
+            categorized_data[current_key].append(f"🟨 {model}")
+        elif "LCD" in model:
+            current_key = "LCD"
+            categorized_data[current_key].append(f"🟦 {model}")
+        elif current_key:
+            categorized_data[current_key].append(model)
+    return categorized_data
 
 def main():
     try:
@@ -113,9 +125,12 @@ def main():
         driver.quit()
 
         if models:
-            categorized_messages = categorize_messages(models)
-            for message in categorized_messages:
-                send_telegram_message(message, BOT_TOKEN, CHAT_ID)
+            categorized_data = categorize_data(models)
+            for category, messages in categorized_data.items():
+                if messages:
+                    header = create_header(category)
+                    message = header + "\n".join(messages)
+                    send_telegram_message(message, BOT_TOKEN, CHAT_ID)
         else:
             logging.warning("❌ داده‌ای برای ارسال وجود ندارد!")
     except Exception as e:
