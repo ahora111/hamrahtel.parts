@@ -42,48 +42,57 @@ def scroll_page(driver, scroll_pause_time=2):
             break
         last_height = new_height
 
+# لیست رنگ‌های احتمالی
+colors_list = ["مشکی", "آبی", "قرمز", "سبز", "سفید", "سفید صدفی", "طلایی", "نقره‌ای", "خاکستری", "بنفش", "رزگلد", "زرد", "نارنجی"]
+
+def is_number(value):
+    try:
+        float(value.replace(",", ""))  # بررسی اینکه مقدار، عدد است یا نه
+        return True
+    except ValueError:
+        return False
+
 def extract_product_data(driver):
     product_elements = driver.find_elements(By.CLASS_NAME, 'mantine-Text-root')
     products = []
+    last_valid_product = None  # برای نگه‌داشتن مدل قبلی در صورت دریافت قیمت جداگانه
 
     for product in product_elements:
         name = product.text.strip().replace("تومانءء", "").replace("تومان", "").strip()
-        print(f"نام محصول استخراج شده: {name}")  # پرینت نام محصول برای بررسی
+        print(f"نام محصول استخراج شده: {name}")  
         parts = name.split()
-        
+
         if len(parts) >= 2:
-            brand = parts[0]  # اولین کلمه برند است
-            model = " ".join(parts[1:])  # بقیه مدل
+            brand = parts[0]  
+            model = " ".join(parts[1:])  
         else:
             brand = "نامشخص"
             model = name
 
-        # بررسی و حذف رنگ و قیمت
         words = model.split()
-        color, price = None, None  # مقدار پیش‌فرض
+        color, price = None, None  
 
-        if words and is_number(words[-1]):  # اگر آخرین کلمه عدد باشد، پس قیمت است
-            price = words.pop()  # حذف آخرین مقدار و ذخیره به‌عنوان قیمت
-        
-        if words and len(words[-1]) <= 6:  # اگر آخرین کلمه یک رنگ باشد (حداکثر 6 کاراکتر)
-            color = words.pop()  # حذف آخرین مقدار و ذخیره به‌عنوان رنگ
+        if words and is_number(words[-1]):  # بررسی قیمت در انتهای مدل
+            price = words.pop()
 
-        model = " ".join(words)  # مدل نهایی بعد از حذف رنگ و قیمت
+        if words and words[-1] in colors_list:  # بررسی رنگ در انتهای مدل
+            color = words.pop()
 
-        if model.strip():  # اگر مدل معتبر بود، ذخیره کن
+        model = " ".join(words)
+
+        if model.strip():  
             print(f"برند: {brand}، مدل: {model}، رنگ: {color}، قیمت: {price}")  
             products.append((brand, model, color, price))
-        else:
-            print(f"⚠️ اطلاعات نامعتبر شناسایی شد و حذف شد: {name}")
+            last_valid_product = (brand, model, color, price)  # ذخیره مدل معتبر
+        elif price and last_valid_product:  
+            # اگر فقط قیمت آمده باشد، آن را به محصول قبلی اختصاص بده
+            brand, model, color, _ = last_valid_product
+            print(f"📌 افزودن قیمت {price} به {model}")
+            products[-1] = (brand, model, color, price)  
 
-    return products[25:]  # حذف موارد اضافی در ابتدای لیست
+    return products[25:]  
 
-def is_number(model_str):
-    try:
-        float(model_str.replace(",", ""))
-        return True
-    except ValueError:
-        return False
+
 
 def process_model(model_str):
     print(f"داده‌های پردازش‌شده نهایی: {processed_data}")  # بررسی خروجی
