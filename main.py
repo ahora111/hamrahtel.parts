@@ -157,6 +157,7 @@ def main():
         
         driver.get('https://hamrahtel.com/quick-checkout?category=mobile-parts')
         WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.CLASS_NAME, 'mantine-Text-root')))
+
         logging.info("✅ داده‌ها آماده‌ی استخراج هستند!")
         scroll_page(driver)
 
@@ -164,7 +165,9 @@ def main():
         products = extract_product_data(driver)
         driver.quit()
 
-        processed_data = [f"{process_model(models[i])} {brands[i]}" for i in range(len(brands))]
+        # پردازش مدل‌ها و برندها
+        processed_data = [f"{process_model(product[1])} {product[0]}" for product in products]
+
         update_date = JalaliDate.today().strftime("%Y-%m-%d")
         message_lines = [decorate_line(row) for row in processed_data]
 
@@ -177,7 +180,7 @@ def main():
                 message = header + "\n" + "\n".join(lines) + footer
                 message_ids[category] = send_telegram_message(message, BOT_TOKEN, CHAT_ID)
 
-                # ✅ ارسال پیام نهایی + دکمه‌های لینک به پیام‌های مربوطه
+        # ✅ ارسال پیام نهایی + دکمه‌های لینک به پیام‌های مربوطه
         final_message = (
             "✅ لیست گوشیای بالا بروز میباشد. تحویل کالا بعد از ثبت خرید، ساعت 11:30 صبح روز بعد می باشد.\n\n"
             "✅ شماره کارت جهت واریز\n"
@@ -190,12 +193,13 @@ def main():
             "📞 09371111558\n"
             "📞 02833991417"
         )
+
         button_markup = {"inline_keyboard": [
             [{"text": "📱 لیست قطعات هوآوی", "url": f"https://t.me/c/{CHAT_ID.replace('-100', '')}/{message_ids.get('🟥', '')}"}],
             [{"text": "📱 لیست قطعات شیایومی", "url": f"https://t.me/c/{CHAT_ID.replace('-100', '')}/{message_ids.get('🟨', '')}"}],
             [{"text": "📱 لیست قطعات سامسونگ", "url": f"https://t.me/c/{CHAT_ID.replace('-100', '')}/{message_ids.get('🟦', '')}"}]
         ]}
-        
+
         send_telegram_message(final_message, BOT_TOKEN, CHAT_ID, reply_markup=button_markup)
 
     except Exception as e:
@@ -203,3 +207,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
