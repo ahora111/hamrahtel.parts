@@ -61,14 +61,20 @@ def escape_markdown(text):
     for char in escape_chars:
         text = text.replace(char, '\\' + char)
     return text
+import re
+
+def clean_special_characters(text):
+    """حذف تمام کاراکترهای خاص از متن"""
+    return re.sub(r'[^\w\s]', '', text)
 
 def send_telegram_message(message, bot_token, chat_id):
-    """ارسال پیام به تلگرام با فرمت HTML"""
+    """ارسال پیام به تلگرام با پاکسازی کاراکترهای خاص"""
+    message = clean_special_characters(message)  # حذف کاراکترهای خاص
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     params = {
         "chat_id": chat_id,
         "text": message,
-        "parse_mode": "HTML"  # 🔥 تغییر به HTML
+        "parse_mode": "HTML"  # استفاده از HTML
     }
     response = requests.post(url, json=params)
     
@@ -77,6 +83,7 @@ def send_telegram_message(message, bot_token, chat_id):
     logging.info(f"📩 پاسخ تلگرام: {response_data}")  
     
     return response_data
+
 
 
 
