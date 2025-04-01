@@ -13,7 +13,7 @@ from persiantools.jdatetime import JalaliDate
 
 # تنظیمات تلگرام
 BOT_TOKEN = "8187924543:AAH0jZJvZdpq_34um8R_yCyHQvkorxczXNQ"
-CHAT_ID = "-1002284274669"
+CHAT_ID = "-1002683452872"
 
 # تنظیمات لاگ‌گیری
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
