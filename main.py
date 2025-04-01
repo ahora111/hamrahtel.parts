@@ -14,7 +14,7 @@ from persiantools.jdatetime import JalaliDate
 
 # تنظیمات مربوط به تلگرام
 BOT_TOKEN = "8187924543:AAH0jZJvZdpq_34um8R_yCyHQvkorxczXNQ"
-CHAT_ID = "-1002284274669"
+CHAT_ID = "-1002683452872"
 
 # تنظیمات لاگ‌گیری
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -167,7 +167,7 @@ def main():
             logging.error("❌ نمی‌توان WebDriver را ایجاد کرد.")
             return
         
-        driver.get('https://hamrahtel.com/quick-checkout')
+        driver.get('https://hamrahtel.com/quick-checkout?category=mobile-parts')
         WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.CLASS_NAME, 'mantine-Text-root')))
         logging.info("✅ داده‌ها آماده‌ی استخراج هستند!")
         scroll_page(driver)
