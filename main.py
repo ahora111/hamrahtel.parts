@@ -46,30 +46,41 @@ def extract_product_data(driver):
     models = [product.text.strip().replace("تومانءء", "") for product in product_elements]
     return models[25:]
 
-# دسته‌بندی پیام‌ها بر اساس کلمات کلیدی و افزودن ایموجی‌ها
-def decorate_line(line):
-    if not line or not isinstance(line, str):
-        return ""  # مقدار پیش‌فرض در صورت نامعتبر بودن مقدار line
-    if "huawei" in line.lower():
-        return f"🟥 {line}"
-    elif any(keyword in line.lower() for keyword in ["poco", "redmi"]):
-        return f"🟨 {line}"
-    elif "lcd" in line.lower():
-        return f"🟦 {line}"
-    return line
 
-def categorize_messages(lines):
-    categories = {"🟥": [], "🟨": [], "🟦": []}
+
+# دسته‌بندی پیام‌ها بر اساس کلمات کلیدی
+def categorize_messages(models):
+    categorized_messages = []  # لیست نهایی برای پیام‌ها
+    current_category = ""  # دسته‌بندی فعلی
+    current_lines = []  # لیست سطرهای مرتبط با دسته فعلی
     
-    for line in lines:
-        if line.startswith("🟥"):
-            categories["🟥"].append(line)
-        elif line.startswith("🟨"):
-            categories["🟨"].append(line)
-        elif line.startswith("🟦"):
-            categories["🟦"].append(line)
+    for model in models:
+        new_category = ""
+        if "HUAWEI" in model:
+            new_category = "🟥"
+        elif "REDMI" in model or "POCO" in model:
+            new_category = "🟨"
+        elif "LCD" in model:
+            new_category = "🟦"
+        
+        # اگر دسته‌بندی تغییر کرد، پیام قبلی را ذخیره کن
+        if new_category:
+            if current_lines:
+                categorized_messages.append("\n".join(current_lines))
+            current_category = new_category
+            current_lines = [f"{current_category} {model}"]
+        else:
+            if current_category:  
+                current_lines.append(model)  # اضافه کردن مدل‌های بدون دسته‌بندی به دسته‌ی قبلی
+            else:
+                categorized_messages.append(model)  # اگر دسته‌بندی نداشت، جداگانه ذخیره شود
+
+    # ذخیره آخرین دسته‌بندی
+    if current_lines:
+        categorized_messages.append("\n".join(current_lines))
     
-    return categories
+    return categorized_messages
+
 
 def escape_markdown(text):
     escape_chars = ['\\', '(', ')', '[', ']', '~', '*', '_', '-', '+', '>', '#', '.', '!', '|']
