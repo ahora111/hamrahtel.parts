@@ -82,48 +82,6 @@ def escape_markdown(text):
 def split_message(message, max_length=4000):
     return [message[i:i+max_length] for i in range(0, len(message), max_length)]
 
-def decorate_line(line):
-    if line.startswith(('🔵', '🟡', '🍏', '🟣')):
-        return line
-    if "Galaxy" in line:
-        return f"🔵 {line}"
-    elif "POCO" in line or "Poco" in line or "Redmi" in line:
-        return f"🟡 {line}"
-    elif "iPhone" in line:
-        return f"🍏 {line}"
-    elif any(keyword in line for keyword in ["RAM", "FA", "Classic"]):
-        return f"🟣 {line}"
-    else:
-        return line
-
-def categorize_messages(lines):
-    categories = {"🔵": [], "🟡": [], "🍏": [], "🟣": []}
-    current_category = None
-
-    for line in lines:
-        if line.startswith("🔵"):
-            current_category = "🔵"
-        elif line.startswith("🟡"):
-            current_category = "🟡"
-        elif line.startswith("🍏"):
-            current_category = "🍏"
-        elif line.startswith("🟣"):
-            current_category = "🟣"
-
-        if current_category:
-            categories[current_category].append(line)
-
-    return categories
-
-def get_header_footer(category, update_date):
-    headers = {
-        "🔵": f"📅 بروزرسانی قیمت در تاریخ {update_date} می باشد\n✅ لیست پخش موبایل اهورا\n⬅️ موجودی سامسونگ ➡️\n",
-        "🟡": f"📅 بروزرسانی قیمت در تاریخ {update_date} می باشد\n✅ لیست پخش موبایل اهورا\n⬅️ موجودی شیایومی ➡️\n",
-        "🍏": f"📅 بروزرسانی قیمت در تاریخ {update_date} می باشد\n✅ لیست پخش موبایل اهورا\n⬅️ موجودی آیفون ➡️\n",
-        "🟣": f"📅 بروزرسانی قیمت در تاریخ {update_date} می باشد\n✅ لیست پخش موبایل اهورا\n⬅️ موجودی متفرقه ➡️\n",
-    }
-    footer = "\n\n☎️ شماره های تماس :\n📞 09371111558\n📞 02833991417"
-    return headers[category], footer
 
 def send_telegram_message(message, bot_token, chat_id, reply_markup=None):
     message_parts = split_message(message)
@@ -152,30 +110,14 @@ def send_telegram_message(message, bot_token, chat_id, reply_markup=None):
     return last_message_id  # برگشت message_id آخرین پیام
 
 
-def get_last_messages(bot_token, chat_id, limit=5):
-    url = f"https://api.telegram.org/bot{bot_token}/getUpdates"
-    response = requests.get(url)
-    if response.json().get("ok"):
-        messages = response.json().get("result", [])
-        return [msg for msg in messages if "message" in msg][-limit:]
-    return []
 
-def main():
-    try:
-        driver = get_driver()
-        if not driver:
-            logging.error("❌ نمی‌توان WebDriver را ایجاد کرد.")
-            return
         
         driver.get('https://hamrahtel.com/quick-checkout?category=mobile-parts')
         WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.CLASS_NAME, 'mantine-Text-root')))
         logging.info("✅ داده‌ها آماده‌ی استخراج هستند!")
         scroll_page(driver)
 
-        valid_brands = ["Galaxy", "POCO", "Redmi", "iPhone", "Redtone", "VOCAL", "TCL", "NOKIA", "Honor", "Huawei", "GLX", "+Otel"]
-        brands, models = extract_product_data(driver, valid_brands)
-        driver.quit()
-
+        
         samsung_message_id = None  # ذخیره message_id سامسونگ
         xiaomi_message_id = None  # ذخیره message_id شیایومی
         iphone_message_id = None  # ذخیره message_id آیفون
