@@ -112,50 +112,6 @@ def categorize_data(models):
             categorized_data[current_key].append(model)
     return categorized_data
 
-def get_latest_message_id():
-    bot = Bot(token=BOT_TOKEN)
-    updates = bot.get_updates()
-    for update in updates:
-        try:
-            message = update.message
-            if message and message.chat.id == int(CHAT_ID):
-                logging.info(f"Message ID: {message.message_id}, Text: {message.text}")
-        except AttributeError:
-            continue
-
-def send_final_message_with_buttons():
-    bot = Bot(token=BOT_TOKEN)
-    
-    # لینک‌های دکمه‌ها
-    samsung_link = "https://t.me/your_channel/123"
-    xiaomi_link = "https://t.me/your_channel/456"
-    huawei_link = "https://t.me/your_channel/789"
-    
-    final_message = """
-✅ لیست قطعات گوشیای بالا بروز میباشد. تحویل کالا بعد از ثبت خرید، ساعت 11:30 صبح روز بعد می باشد.
-
-✅ شماره کارت جهت واریز
-🔷 شماره شبا : IR970560611828006154229701
-🔷 شماره کارت : 6219861812467917
-🔷 بلو بانک   حسین گرئی
-
-⭕️ حتما رسید واریز به ایدی تلگرام زیر ارسال شود.
-🆔 @lhossein1
-
-✅ شماره تماس ثبت سفارش:
-📞 09371111558
-📞 02833991417
-"""
-    # دکمه‌های شیشه‌ای
-    keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("قطعات سامسونگ📱", url=samsung_link)],
-        [InlineKeyboardButton("قطعات شیایومی📱", url=xiaomi_link)],
-        [InlineKeyboardButton("قطعات هوآوی📱", url=huawei_link)]
-    ])
-    
-    # ارسال پیام
-    bot.send_message(chat_id=CHAT_ID, text=final_message, reply_markup=keyboard)
-
 def find_latest_posts_with_emojis():
     bot = Bot(token=BOT_TOKEN)
     updates = bot.get_updates()
@@ -182,23 +138,33 @@ def find_latest_posts_with_emojis():
 
     return latest_links
 
-
-# تابع ویرایش پیام پایانی با دکمه‌ها
-def edit_message_with_buttons(latest_links):
+def send_final_message_with_buttons(latest_links):
     bot = Bot(token=BOT_TOKEN)
-    final_message_id = 12345  # شناسه پیام پایانی را تنظیم کنید
+    
+    final_message = """
+✅ لیست قطعات گوشیای بالا بروز میباشد. تحویل کالا بعد از ثبت خرید، ساعت 11:30 صبح روز بعد می باشد.
 
-    # ایجاد دکمه‌ها
+✅ شماره کارت جهت واریز
+🔷 شماره شبا : IR970560611828006154229701
+🔷 شماره کارت : 6219861812467917
+🔷 بلو بانک   حسین گرئی
+
+⭕️ حتما رسید واریز به ایدی تلگرام زیر ارسال شود.
+🆔 @lhossein1
+
+✅ شماره تماس ثبت سفارش:
+📞 09371111558
+📞 02833991417
+"""
+    # دکمه‌های شیشه‌ای
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("قطعات سامسونگ📱", url=latest_links["🟦"] if latest_links["🟦"] else "https://example.com")],
-        [InlineKeyboardButton("قطعات شیایومی📱", url=latest_links["🟨"] if latest_links["🟨"] else "https://example.com")],
-        [InlineKeyboardButton("قطعات هوآوی📱", url=latest_links["🟥"] if latest_links["🟥"] else "https://example.com")]
-])
-
-
-
-    # ویرایش پیام پایانی
-    bot.edit_message_reply_markup(chat_id=CHAT_ID, message_id=final_message_id, reply_markup=keyboard)
+        [InlineKeyboardButton("قطعات سامسونگ📱", url=latest_links.get("🟦", "https://example.com"))],
+        [InlineKeyboardButton("قطعات شیایومی📱", url=latest_links.get("🟨", "https://example.com"))],
+        [InlineKeyboardButton("قطعات هوآوی📱", url=latest_links.get("🟥", "https://example.com"))]
+    ])
+    
+    bot.send_message(chat_id=CHAT_ID, text=final_message, reply_markup=keyboard)
+    logging.info("✅ پیام پایانی با دکمه‌ها ارسال شد!")
 
 def main():
     try:
@@ -224,14 +190,13 @@ def main():
                     message = header + "\n".join(messages) + footer
                     send_telegram_message(message, BOT_TOKEN, CHAT_ID)
             
-            # شناسایی پیام‌های ایموجی‌دار و ویرایش پیام پایانی
+            # شناسایی پیام‌های ایموجی‌دار و ارسال پیام پایانی
             latest_links = find_latest_posts_with_emojis()
-            edit_message_with_buttons(latest_links)
+            send_final_message_with_buttons(latest_links)
         else:
             logging.warning("❌ داده‌ای برای ارسال وجود ندارد!")
     except Exception as e:
         logging.error(f"❌ خطا: {e}")
-
 
 if __name__ == "__main__":
     main()
