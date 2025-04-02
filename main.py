@@ -61,11 +61,12 @@ def process_model(model_str):
         return f"{model_value_with_increase:,.0f}"
     return model_str
 
+import re
+
 def escape_markdown(text):
-    escape_chars = ['\\', '(', ')', '[', ']', '~', '*', '_', '-', '+', '>', '#', '.', '!', '|']
-    for char in escape_chars:
-        text = text.replace(char, '\\' + char)
-    return text
+    escape_chars = r'_*[]()~`>#+-=|{}.!'
+    return re.sub(f"([{re.escape(escape_chars)}])", r"\\\1", text)
+
 
 def split_message(message, max_length=4000):
     return [message[i:i+max_length] for i in range(0, len(message), max_length)]
