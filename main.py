@@ -154,7 +154,7 @@ def main():
         scroll_page(driver)
         
         # استخراج داده‌ها
-        brands, models = extract_product_data(driver)
+        models = extract_product_data(driver)  # فقط models را دریافت کنید
         driver.quit()
         
 
