@@ -176,27 +176,32 @@ def main():
         logging.info("✅ داده‌ها آماده‌ی استخراج هستند!")
         scroll_page(driver)
 
-
-        valid_brands = ["Galaxy", "POCO", "Redmi", "iPhone", "Redtone", "VOCAL", "TCL", "NOKIA", "Honor", "Huawei", "GLX", "+Otel", "اینچی" ]
+        valid_brands = ["Galaxy", "POCO", "Redmi", "iPhone", "Redtone", "VOCAL", "TCL", "NOKIA", "Honor", "Huawei", "GLX", "+Otel", "اینچی"]
         brands, models = extract_product_data(driver, valid_brands)
-   
+        
         # بررسی اینکه آیا داده‌ها استخراج شده‌اند یا نه
         if not brands or not models:
             logging.error("❌ داده‌ها استخراج نشده‌اند یا خالی هستند!")
             return
         
         driver.quit()
+
+        # ادامه‌ی کد شما...
+
         
 
         samsung_message_id = None  # ذخیره message_id سامسونگ
         xiaomi_message_id = None  # ذخیره message_id شیایومی
         huawei_message_id = None  # ذخیره message_id آیفون
         
-        if brands:
+
+
+        if brands and models:
             processed_data = []
             for i in range(len(brands)):
                 model_str = process_model(models[i])
                 processed_data.append(f"{model_str} {brands[i]}")
+
 
             update_date = JalaliDate.today().strftime("%Y-%m-%d")
             message_lines = []
