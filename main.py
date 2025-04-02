@@ -194,7 +194,7 @@ def main():
                 decorated = decorate_line(row)
                 message_lines.append(decorated)
 
-            categories = categorize_messages(message_lines)
+            categories = categorize_data(message_lines)
 
             for category, lines in categories.items():
                 if lines:
