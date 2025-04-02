@@ -188,12 +188,12 @@ def main():
                     # ذخیره شناسه پیام
                     if response and response.status_code == 200:
                         message_id = response.json().get('result', {}).get('message_id')
-                        if category == "LCD":
-                            message_ids["LCD"] = message_id
-                        elif category == "REDMI_POCO":
-                            message_ids["REDMI_POCO"] = message_id
-                        elif category == "HUAWEI":
-                            message_ids["HUAWEI"] = message_id
+                        if category == "🟦":
+                            message_ids["🟦"] = message_id
+                        elif category == "🟨":
+                            message_ids["🟨"] = message_id
+                        elif category == "🟥":
+                            message_ids["🟥"] = message_id
             
             # ارسال پیام پایانی با دکمه‌های شیشه‌ای
             send_message_with_buttons(BOT_TOKEN, CHAT_ID, message_ids)
