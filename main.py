@@ -56,6 +56,14 @@ def extract_product_data(driver, valid_brands):
 
     return brands[25:], models[25:]
 
+
+def is_number(model_str):
+    try:
+        float(model_str.replace(",", ""))
+        return True
+    except ValueError:
+        return False
+        
 def process_model(model_str):
     model_str = model_str.replace("٬", "").replace(",", "").strip()
     if is_number(model_str):
