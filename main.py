@@ -64,8 +64,12 @@ def process_model(model_str):
 import re
 
 def escape_markdown(text):
-    escape_chars = r'_*\[\]()~`>#+\-=|{}.!'
-    return re.sub(f"([{re.escape(escape_chars)}])", r"\\\1", text)
+    """
+    Escape تمام کاراکترهای خاص موردنیاز برای MarkdownV2 در تلگرام.
+    """
+    escape_chars = r'_*[\]()~`>#+-=|{}.!'
+    return re.sub(r'([%s])' % re.escape(escape_chars), r'\\\1', text)
+
 
 
 
