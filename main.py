@@ -181,9 +181,6 @@ def edit_message_with_buttons(latest_links):
     # ویرایش پیام پایانی
     bot.edit_message_reply_markup(chat_id=CHAT_ID, message_id=final_message_id, reply_markup=keyboard)
 
-    # ویرایش پیام پایانی
-    bot.edit_message_reply_markup(chat_id=CHAT_ID, message_id=final_message_id, reply_markup=keyboard)
-
 def main():
     try:
         driver = get_driver()
