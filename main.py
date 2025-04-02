@@ -97,6 +97,10 @@ def create_header(category):
 def create_footer():
     return "\n\n☎️ شماره های تماس :\n📞 09371111558\n📞 02833991417"
 
+def decorate_line(line):
+    if line.startswith(('🟦', '🟨', '🟥')):
+        return line
+        
 def categorize_data(models):
     categorized_data = {"HUAWEI": [], "REDMI_POCO": [], "LCD": []}
     current_key = None
