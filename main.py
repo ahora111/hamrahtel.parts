@@ -186,7 +186,7 @@ def main():
                     elif category == "🟨":  # ذخیره message_id شیایومی
                         xiaomi_message_id = msg_id
                     elif category == "🟥":  # ذخیره message_id هوآوی
-
+                        huawei_message_id = msg_id  # متغیر مناسب را ذخیره کن
         else:
             logging.warning("❌ داده‌ای برای ارسال وجود ندارد!")
 
