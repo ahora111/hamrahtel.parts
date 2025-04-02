@@ -53,8 +53,14 @@ def extract_product_data(driver, valid_brands):
         else:
             models.append(brand + " " + model)
             brands.append("")
+    
+    if not brands:  # اگر لیست برندها خالی بود، به‌طور پیش‌فرض یک لیست خالی باز می‌گرداند
+        logging.warning("❌ برندها پیدا نشد!")
+    if not models:  # اگر لیست مدل‌ها خالی بود، به‌طور پیش‌فرض یک لیست خالی باز می‌گرداند
+        logging.warning("❌ مدل‌ها پیدا نشد!")
+    
+    return brands or [], models or []  # در صورتی که خالی باشند، یک لیست خالی برمی‌گرداند
 
-    return brands[25:], models[25:]
 
 
 def is_number(model_str):
