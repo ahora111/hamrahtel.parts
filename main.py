@@ -139,6 +139,47 @@ def send_final_message(bot_token, chat_id, samsung_link, xiaomi_link, huawei_lin
     bot.send_message(chat_id=chat_id, text=final_message, reply_markup=keyboard)
     logging.info("✅ پیام پایانی با دکمه‌ها ارسال شد!")
 
+
+from telegram import Bot, InlineKeyboardMarkup, InlineKeyboardButton
+
+# تابع شناسایی پیام‌های حاوی ایموجی‌ها
+def find_latest_posts_with_emojis():
+    bot = Bot(token=BOT_TOKEN)
+    updates = bot.get_updates()
+    latest_links = {"🟦": None, "🟨": None, "🟥": None}
+    
+    # بررسی پیام‌ها
+    for update in updates:
+        try:
+            message = update.message
+            if message.chat.id == int(CHAT_ID):
+                text = message.text
+                if "🟦" in text:
+                    latest_links["🟦"] = f"https://t.me/{CHAT_ID}/{message.message_id}"
+                elif "🟨" in text:
+                    latest_links["🟨"] = f"https://t.me/{CHAT_ID}/{message.message_id}"
+                elif "🟥" in text:
+                    latest_links["🟥"] = f"https://t.me/{CHAT_ID}/{message.message_id}"
+        except Exception as e:
+            continue
+
+    return latest_links
+
+# تابع ویرایش پیام پایانی با دکمه‌ها
+def edit_message_with_buttons(latest_links):
+    bot = Bot(token=BOT_TOKEN)
+    final_message_id = 12345  # شناسه پیام پایانی را اینجا تنظیم کنید
+    
+    # ایجاد دکمه‌ها
+    keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("قطعات سامسونگ📱", url=latest_links.get("🟦", ""))],
+        [InlineKeyboardButton("قطعات شیایومی📱", url=latest_links.get("🟨", ""))],
+        [InlineKeyboardButton("قطعات هوآوی📱", url=latest_links.get("🟥", ""))]
+    ])
+    
+    # ویرایش پیام پایانی
+    bot.edit_message_reply_markup(chat_id=CHAT_ID, message_id=final_message_id, reply_markup=keyboard)
+
 def main():
     try:
         driver = get_driver()
@@ -156,21 +197,21 @@ def main():
 
         if models:
             categorized_data = categorize_data(models)
-            links = {"LCD": "", "REDMI_POCO": "", "HUAWEI": ""}  # اینجا لینک‌های واقعی پست‌ها را جایگزین کنید
             for category, messages in categorized_data.items():
                 if messages:
                     header = create_header(category)
                     footer = create_footer()
                     message = header + "\n".join(messages) + footer
                     send_telegram_message(message, BOT_TOKEN, CHAT_ID)
-                    links[category] = f"https://t.me/your_channel/{CHAT_ID}"  # تنظیم لینک‌های مربوطه
-                    
-            # ارسال پیام پایانی با دکمه‌ها
-            send_final_message(BOT_TOKEN, CHAT_ID, links["LCD"], links["REDMI_POCO"], links["HUAWEI"])
+            
+            # شناسایی پیام‌های ایموجی‌دار و ویرایش پیام پایانی
+            latest_links = find_latest_posts_with_emojis()
+            edit_message_with_buttons(latest_links)
         else:
             logging.warning("❌ داده‌ای برای ارسال وجود ندارد!")
     except Exception as e:
         logging.error(f"❌ خطا: {e}")
+
 
 if __name__ == "__main__":
     main()
