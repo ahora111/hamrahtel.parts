@@ -64,8 +64,9 @@ def process_model(model_str):
 import re
 
 def escape_markdown(text):
-    escape_chars = r'_*[]()~`>#+-=|{}.!'
+    escape_chars = r'_*\[\]()~`>#+\-=|{}.!'
     return re.sub(f"([{re.escape(escape_chars)}])", r"\\\1", text)
+
 
 
 def split_message(message, max_length=4000):
