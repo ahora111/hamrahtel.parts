@@ -122,6 +122,7 @@ def find_latest_posts_with_emojis():
             message = update.message
             if message and message.chat.id == int(CHAT_ID):
                 text = message.text or ""
+                # شناسایی ایموجی‌ها و ذخیره لینک پیام
                 if "🟦" in text:
                     latest_links["🟦"] = f"https://t.me/{CHAT_ID}/{message.message_id}"
                 elif "🟨" in text:
@@ -129,14 +130,19 @@ def find_latest_posts_with_emojis():
                 elif "🟥" in text:
                     latest_links["🟥"] = f"https://t.me/{CHAT_ID}/{message.message_id}"
         except AttributeError:
-            continue  # اگر پیام نامعتبر است، رد می‌شود
+            continue
 
-    # جایگزین لینک پیش‌فرض برای مواردی که لینک ندارند
-    for emoji in latest_links:
-        if not latest_links[emoji]:
-            latest_links[emoji] = "https://example.com"
+    # بررسی لینک‌های خالی و دادن هشدار
+    for emoji, link in latest_links.items():
+        if not link:
+            logging.warning(f"⛔ لینک مربوط به ایموجی {emoji} یافت نشد!")
+            latest_links[emoji] = None  # به جای لینک پیش‌فرض، مقدار خالی بگذارید
 
     return latest_links
+    
+latest_links = find_latest_posts_with_emojis()
+logging.info(f"Latest Links: {latest_links}")
+
 
 def get_latest_message_id():
     bot = Bot(token=BOT_TOKEN)
