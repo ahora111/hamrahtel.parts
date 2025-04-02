@@ -3,13 +3,11 @@ import os
 import time
 import requests
 import logging
-import json
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from persiantools.jdatetime import JalaliDate
 
 # تنظیمات تلگرام
 BOT_TOKEN = "8187924543:AAH0jZJvZdpq_34um8R_yCyHQvkorxczXNQ"
@@ -69,26 +67,9 @@ def escape_markdown(text):
 
 def split_message(message, max_length=4000):
     return [message[i:i+max_length] for i in range(0, len(message), max_length)]
+from persiantools.jdatetime import JalaliDate
 
-def send_telegram_message(message, bot_token, chat_id, reply_markup=None):
-    """ارسال پیام به تلگرام با قابلیت اضافه کردن دکمه‌های شیشه‌ای"""
-    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-    params = {
-        "chat_id": chat_id,
-        "text": message,
-        "parse_mode": "MarkdownV2"
-    }
-    if reply_markup:
-        params["reply_markup"] = json.dumps(reply_markup)
-
-    response = requests.post(url, json=params)
-    response_data = response.json()
-    if response_data.get('ok'):
-        logging.info("✅ پیام ارسال شد!")
-        return response_data["result"]["message_id"]
-    else:
-        logging.error(f"❌ خطا در ارسال پیام: {response_data}")
-        return None
+from persiantools.jdatetime import JalaliDate
 
 def create_header(category):
     today_date = JalaliDate.today().strftime('%Y/%m/%d')
@@ -99,7 +80,10 @@ def create_header(category):
     elif category == "HUAWEI":
         return f"📅 بروزرسانی قیمت در تاریخ {today_date} می باشد\n✅ لیست پخش قطعات موبایل اهورا\n⬅️ موجودی قطعات هوآوی ➡️\n\n"
     return ""
-    
+
+def create_footer():
+    return "\n\n☎️ شماره های تماس :\n📞 09371111558\n📞 02833991417"
+
 def categorize_data(models):
     categorized_data = {"HUAWEI": [], "REDMI_POCO": [], "LCD": []}
     current_key = None
@@ -116,34 +100,46 @@ def categorize_data(models):
         elif current_key:
             categorized_data[current_key].append(model)
     return categorized_data
+    
+def send_telegram_message(message, bot_token, chat_id, reply_markup=None):
+    message_parts = split_message(message)
+    last_message_id = None
+    for part in message_parts:
+        part = escape_markdown(part)
+        url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+        params = {
+            "chat_id": chat_id,
+            "text": part,
+            "parse_mode": "MarkdownV2"
+        }
+        if reply_markup:
+            params["reply_markup"] = json.dumps(reply_markup)  # ✅ تبدیل `reply_markup` به JSON
 
-def send_final_message(bot_token, chat_id, links):
-    """ارسال پیام نهایی همراه با دکمه‌های شیشه‌ای"""
-    final_message = """
-✅ لیست قطعات گوشیای بالا بروز میباشد. تحویل کالا بعد از ثبت خرید، ساعت 11:30 صبح روز بعد می باشد.
+        headers = {"Content-Type": "application/json"}  # ✅ اضافه کردن `headers` برای `POST`
+        response = requests.post(url, json=params, headers=headers)  
+        response_data = response.json()
+        if response_data.get('ok'):
+            last_message_id = response_data["result"]["message_id"]
+        else:
+            logging.error(f"❌ خطا در ارسال پیام: {response_data}")
+            return None
 
-✅ شماره کارت جهت واریز
-🔷 شماره شبا : IR970560611828006154229701
-🔷 شماره کارت : 6219861812467917
-🔷 بلو بانک   حسین گرئی
+    logging.info("✅ پیام ارسال شد!")
+    return last_message_id  # برگشت message_id آخرین پیام
 
-⭕️ حتما رسید واریز به ایدی تلگرام زیر ارسال شود.
-🆔 @lhossein1
 
-✅ شماره تماس ثبت سفارش:
-📞 09371111558
-📞 02833991417
-"""
-    # ایجاد دکمه‌های شیشه‌ای
-    button_markup = {"inline_keyboard": []}
-    if links.get("LCD"):
-        button_markup["inline_keyboard"].append([{"text": "قطعات سامسونگ 📱", "url": links["LCD"]}])
-    if links.get("REDMI_POCO"):
-        button_markup["inline_keyboard"].append([{"text": "قطعات شیایومی 📱", "url": links["REDMI_POCO"]}])
-    if links.get("HUAWEI"):
-        button_markup["inline_keyboard"].append([{"text": "قطعات هوآوی 📱", "url": links["HUAWEI"]}])
 
-    send_telegram_message(final_message, bot_token, chat_id, reply_markup=button_markup)
+def get_last_messages(bot_token, chat_id, limit=5):
+    url = f"https://api.telegram.org/bot{bot_token}/getUpdates"
+    response = requests.get(url)
+    if response.json().get("ok"):
+        messages = response.json().get("result", [])
+        return [msg for msg in messages if "message" in msg][-limit:]
+    return []
+
+
+
+
 
 def main():
     try:
@@ -156,25 +152,72 @@ def main():
         WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.CLASS_NAME, 'mantine-Text-root')))
         logging.info("✅ داده‌ها آماده‌ی استخراج هستند!")
         scroll_page(driver)
-
+        
         models = extract_product_data(driver)
         driver.quit()
+        
 
-        if models:
-            categorized_data = categorize_data(models)
-            links = {}
-            for category, messages in categorized_data.items():
-                if messages:
-                    header = create_header(category)
-                    footer = "\n\n☎️ شماره های تماس:\n📞 09371111558\n📞 02833991417"
-                    message = header + "\n".join(messages) + footer
+        samsung_message_id = None  # ذخیره message_id سامسونگ
+        xiaomi_message_id = None  # ذخیره message_id شیایومی
+        huawei_message_id = None  # ذخیره message_id آیفون
+        
+        if brands:
+            processed_data = []
+            for i in range(len(brands)):
+                model_str = process_model(models[i])
+                processed_data.append(f"{model_str} {brands[i]}")
+
+            update_date = JalaliDate.today().strftime("%Y-%m-%d")
+            message_lines = []
+            for row in processed_data:
+                decorated = decorate_line(row)
+                message_lines.append(decorated)
+
+            categories = categorize_messages(message_lines)
+
+            for category, lines in categories.items():
+                if lines:
+                    header, footer = get_header_footer(category, update_date)
+                    message = header + "\n" + "\n".join(lines) + footer
                     msg_id = send_telegram_message(message, BOT_TOKEN, CHAT_ID)
-                    links[category] = f"https://t.me/c/{CHAT_ID.replace('-100', '')}/{msg_id}"
 
-            # ارسال پیام پایانی با دکمه‌های شیشه‌ای
-            send_final_message(BOT_TOKEN, CHAT_ID, links)
+                    if category == "🟦":  # ذخیره message_id سامسونگ
+                        samsung_message_id = msg_id
+                    elif category == "🟨":  # ذخیره message_id شیایومی
+                        xiaomi_message_id = msg_id
+                    elif category == "🟥":  # ذخیره message_id هوآوی
+
         else:
             logging.warning("❌ داده‌ای برای ارسال وجود ندارد!")
+
+        if not samsung_message_id:
+            logging.error("❌ پیام سامسونگ ارسال نشد، دکمه اضافه نخواهد شد!")
+            return
+
+        # ✅ ارسال پیام نهایی + دکمه‌های لینک به پیام‌های مربوطه
+        final_message = (
+            "✅ لیست قطعات بالا بروز میباشد. تحویل کالا بعد از ثبت خرید، ساعت 11:30 صبح روز بعد می باشد.\n\n"
+            "✅ شماره کارت جهت واریز\n"
+            "🔷 شماره شبا : IR970560611828006154229701\n"
+            "🔷 شماره کارت : 6219861812467917\n"
+            "🔷 بلو بانک   حسین گرئی\n\n"
+            "⭕️ حتما رسید واریز به ایدی تلگرام زیر ارسال شود .\n"
+            "🆔 @lhossein1\n\n"
+            "✅شماره تماس ثبت سفارش :\n"
+            "📞 09371111558\n"
+            "📞 02833991417"
+        )
+
+        button_markup = {"inline_keyboard": []}
+        if samsung_message_id:
+            button_markup["inline_keyboard"].append([{"text": "📱 لیست قطعات سامسونگ", "url": f"https://t.me/c/{CHAT_ID.replace('-100', '')}/{samsung_message_id}"}])
+        if xiaomi_message_id:
+            button_markup["inline_keyboard"].append([{"text": "📱 لیست قطعات شیایومی", "url": f"https://t.me/c/{CHAT_ID.replace('-100', '')}/{xiaomi_message_id}"}])
+        if huawei_message_id:
+            button_markup["inline_keyboard"].append([{"text": "📱 لیست قطعات هوآوی", "url": f"https://t.me/c/{CHAT_ID.replace('-100', '')}/{huawei_message_id}"}])
+    
+        send_telegram_message(final_message, BOT_TOKEN, CHAT_ID, reply_markup=button_markup)
+
     except Exception as e:
         logging.error(f"❌ خطا: {e}")
 
