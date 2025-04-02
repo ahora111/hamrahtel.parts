@@ -112,7 +112,25 @@ def categorize_data(models):
             categorized_data[current_key].append(model)
     return categorized_data
 
-def send_final_message(bot_token, chat_id, samsung_link, xiaomi_link, huawei_link):
+def get_latest_message_id():
+    bot = Bot(token=BOT_TOKEN)
+    updates = bot.get_updates()
+    for update in updates:
+        try:
+            message = update.message
+            if message and message.chat.id == int(CHAT_ID):
+                logging.info(f"Message ID: {message.message_id}, Text: {message.text}")
+        except AttributeError:
+            continue
+
+def send_final_message_with_buttons():
+    bot = Bot(token=BOT_TOKEN)
+    
+    # لینک‌های دکمه‌ها
+    samsung_link = "https://t.me/your_channel/123"
+    xiaomi_link = "https://t.me/your_channel/456"
+    huawei_link = "https://t.me/your_channel/789"
+    
     final_message = """
 ✅ لیست قطعات گوشیای بالا بروز میباشد. تحویل کالا بعد از ثبت خرید، ساعت 11:30 صبح روز بعد می باشد.
 
@@ -128,19 +146,15 @@ def send_final_message(bot_token, chat_id, samsung_link, xiaomi_link, huawei_lin
 📞 09371111558
 📞 02833991417
 """
-    # ایجاد دکمه‌ها
+    # دکمه‌های شیشه‌ای
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton("قطعات سامسونگ📱", url=samsung_link)],
         [InlineKeyboardButton("قطعات شیایومی📱", url=xiaomi_link)],
         [InlineKeyboardButton("قطعات هوآوی📱", url=huawei_link)]
     ])
     
-    bot = Bot(token=bot_token)
-    bot.send_message(chat_id=chat_id, text=final_message, reply_markup=keyboard)
-    logging.info("✅ پیام پایانی با دکمه‌ها ارسال شد!")
-
-
-from telegram import Bot, InlineKeyboardMarkup, InlineKeyboardButton
+    # ارسال پیام
+    bot.send_message(chat_id=CHAT_ID, text=final_message, reply_markup=keyboard)
 
 def find_latest_posts_with_emojis():
     bot = Bot(token=BOT_TOKEN)
