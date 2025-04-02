@@ -174,6 +174,10 @@ def main():
         valid_brands = ["Galaxy", "POCO", "Redmi", "iPhone", "Redtone", "VOCAL", "TCL", "NOKIA", "Honor", "Huawei", "GLX", "+Otel", "اینچی" ]
         brands, models = extract_product_data(driver, valid_brands)
    
+        # بررسی اینکه آیا داده‌ها استخراج شده‌اند یا نه
+        if not brands or not models:
+            logging.error("❌ داده‌ها استخراج نشده‌اند یا خالی هستند!")
+            return
         
         driver.quit()
         
