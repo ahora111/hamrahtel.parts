@@ -141,9 +141,9 @@ def send_message_with_buttons(bot_token, chat_id, message_ids):
     # دکمه‌های شیشه‌ای
     inline_keyboard = {
         "inline_keyboard": [
-            [{"text": "قطعات سامسونگ", "url": f"https://t.me/c/{chat_id.replace('-100', '')}/{message_ids.get('LCD', '')}"}],
-            [{"text": "قطعات شیایومی", "url": f"https://t.me/c/{chat_id.replace('-100', '')}/{message_ids.get('REDMI_POCO', '')}"}],
-            [{"text": "قطعات هوآوی", "url": f"https://t.me/c/{chat_id.replace('-100', '')}/{message_ids.get('HUAWEI', '')}"}]
+            [{"text": "قطعات سامسونگ", "url": f"https://t.me/c/{chat_id.replace('-100', '')}/{message_ids.get('🟦', '')}"}],
+            [{"text": "قطعات شیایومی", "url": f"https://t.me/c/{chat_id.replace('-100', '')}/{message_ids.get('🟨', '')}"}],
+            [{"text": "قطعات هوآوی", "url": f"https://t.me/c/{chat_id.replace('-100', '')}/{message_ids.get('🟥', '')}"}]
         ]
     }
 
