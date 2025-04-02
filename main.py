@@ -46,6 +46,30 @@ def extract_product_data(driver):
     models = [product.text.strip().replace("تومانءء", "") for product in product_elements]
     return models[25:]
 
+def is_number(model_str):
+    try:
+        float(model_str.replace(",", ""))
+        return True
+    except ValueError:
+        return False
+
+def process_model(model_str):
+    model_str = model_str.replace("٬", "").replace(",", "").strip()
+    if is_number(model_str):
+        model_value = float(model_str)
+        model_value_with_increase = model_value * 1.015
+        return f"{model_value_with_increase:,.0f}"
+    return model_str
+
+def escape_markdown(text):
+    escape_chars = ['\\', '(', ')', '[', ']', '~', '*', '_', '-', '+', '>', '#', '.', '!', '|']
+    for char in escape_chars:
+        text = text.replace(char, '\\' + char)
+    return text
+
+def split_message(message, max_length=4000):
+    return [message[i:i+max_length] for i in range(0, len(message), max_length)]
+
 def send_telegram_message(message, bot_token, chat_id, reply_markup=None):
     """ارسال پیام به تلگرام با قابلیت اضافه کردن دکمه‌های شیشه‌ای"""
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
@@ -75,7 +99,7 @@ def create_header(category):
     elif category == "HUAWEI":
         return f"📅 بروزرسانی قیمت در تاریخ {today_date} می باشد\n✅ لیست پخش قطعات موبایل اهورا\n⬅️ موجودی قطعات هوآوی ➡️\n\n"
     return ""
-
+    
 def categorize_data(models):
     categorized_data = {"HUAWEI": [], "REDMI_POCO": [], "LCD": []}
     current_key = None
