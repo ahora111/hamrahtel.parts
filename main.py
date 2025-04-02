@@ -8,6 +8,8 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from telegram import Bot, InlineKeyboardMarkup, InlineKeyboardButton
+from persiantools.jdatetime import JalaliDate
 
 # تنظیمات تلگرام
 BOT_TOKEN = "8187924543:AAH0jZJvZdpq_34um8R_yCyHQvkorxczXNQ"
@@ -80,10 +82,6 @@ def send_telegram_message(message, bot_token, chat_id):
             return
     logging.info("✅ پیام ارسال شد!")
 
-from persiantools.jdatetime import JalaliDate
-
-from persiantools.jdatetime import JalaliDate
-
 def create_header(category):
     today_date = JalaliDate.today().strftime('%Y/%m/%d')
     if category == "LCD":
@@ -114,7 +112,7 @@ def categorize_data(models):
             categorized_data[current_key].append(model)
     return categorized_data
 
-def send_final_message(bot_token, chat_id):
+def send_final_message(bot_token, chat_id, samsung_link, xiaomi_link, huawei_link):
     final_message = """
 ✅ لیست قطعات گوشیای بالا بروز میباشد. تحویل کالا بعد از ثبت خرید، ساعت 11:30 صبح روز بعد می باشد.
 
@@ -130,7 +128,16 @@ def send_final_message(bot_token, chat_id):
 📞 09371111558
 📞 02833991417
 """
-    send_telegram_message(final_message, bot_token, chat_id)
+    # ایجاد دکمه‌ها
+    keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("قطعات سامسونگ📱", url=samsung_link)],
+        [InlineKeyboardButton("قطعات شیایومی📱", url=xiaomi_link)],
+        [InlineKeyboardButton("قطعات هوآوی📱", url=huawei_link)]
+    ])
+    
+    bot = Bot(token=bot_token)
+    bot.send_message(chat_id=chat_id, text=final_message, reply_markup=keyboard)
+    logging.info("✅ پیام پایانی با دکمه‌ها ارسال شد!")
 
 def main():
     try:
@@ -149,14 +156,17 @@ def main():
 
         if models:
             categorized_data = categorize_data(models)
+            links = {"LCD": "", "REDMI_POCO": "", "HUAWEI": ""}  # اینجا لینک‌های واقعی پست‌ها را جایگزین کنید
             for category, messages in categorized_data.items():
                 if messages:
                     header = create_header(category)
                     footer = create_footer()
                     message = header + "\n".join(messages) + footer
                     send_telegram_message(message, BOT_TOKEN, CHAT_ID)
-            # ارسال پیام پایانی
-            send_final_message(BOT_TOKEN, CHAT_ID)
+                    links[category] = f"https://t.me/your_channel/{CHAT_ID}"  # تنظیم لینک‌های مربوطه
+                    
+            # ارسال پیام پایانی با دکمه‌ها
+            send_final_message(BOT_TOKEN, CHAT_ID, links["LCD"], links["REDMI_POCO"], links["HUAWEI"])
         else:
             logging.warning("❌ داده‌ای برای ارسال وجود ندارد!")
     except Exception as e:
