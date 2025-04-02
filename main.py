@@ -142,28 +142,32 @@ def send_final_message(bot_token, chat_id, samsung_link, xiaomi_link, huawei_lin
 
 from telegram import Bot, InlineKeyboardMarkup, InlineKeyboardButton
 
-# تابع شناسایی پیام‌های حاوی ایموجی‌ها
 def find_latest_posts_with_emojis():
     bot = Bot(token=BOT_TOKEN)
     updates = bot.get_updates()
     latest_links = {"🟦": None, "🟨": None, "🟥": None}
     
-    # بررسی پیام‌ها
     for update in updates:
         try:
             message = update.message
-            if message.chat.id == int(CHAT_ID):
-                text = message.text
+            if message and message.chat.id == int(CHAT_ID):
+                text = message.text or ""
                 if "🟦" in text:
                     latest_links["🟦"] = f"https://t.me/{CHAT_ID}/{message.message_id}"
                 elif "🟨" in text:
                     latest_links["🟨"] = f"https://t.me/{CHAT_ID}/{message.message_id}"
                 elif "🟥" in text:
                     latest_links["🟥"] = f"https://t.me/{CHAT_ID}/{message.message_id}"
-        except Exception as e:
-            continue
+        except AttributeError:
+            continue  # اگر پیام نامعتبر است، رد می‌شود
+
+    # جایگزین لینک پیش‌فرض برای مواردی که لینک ندارند
+    for emoji in latest_links:
+        if not latest_links[emoji]:
+            latest_links[emoji] = "https://example.com"
 
     return latest_links
+
 
 # تابع ویرایش پیام پایانی با دکمه‌ها
 def edit_message_with_buttons(latest_links):
@@ -172,10 +176,11 @@ def edit_message_with_buttons(latest_links):
 
     # ایجاد دکمه‌ها
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("قطعات سامسونگ📱", url=latest_links.get("🟦", "https://example.com"))],
-        [InlineKeyboardButton("قطعات شیایومی📱", url=latest_links.get("🟨", "https://example.com"))],
-        [InlineKeyboardButton("قطعات هوآوی📱", url=latest_links.get("🟥", "https://example.com"))]
+        [InlineKeyboardButton("قطعات سامسونگ📱", url=latest_links["🟦"] if latest_links["🟦"] else "https://example.com")],
+        [InlineKeyboardButton("قطعات شیایومی📱", url=latest_links["🟨"] if latest_links["🟨"] else "https://example.com")],
+        [InlineKeyboardButton("قطعات هوآوی📱", url=latest_links["🟥"] if latest_links["🟥"] else "https://example.com")]
 ])
+
 
 
     # ویرایش پیام پایانی
