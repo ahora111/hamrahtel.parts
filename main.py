@@ -142,7 +142,7 @@ def find_message_with_emojis(messages):
     return None
 
 
-# ارسال پیام همراه با دکمه‌های شیشه‌ای
+# ارسال پیام همراه با دکمه‌های شیشه‌ای (بهبود یافته)
 def send_message_with_buttons(bot_token, chat_id):
     final_message = """
 ✅ لیست قطعات گوشیای بالا بروز میباشد.
@@ -171,17 +171,15 @@ def send_message_with_buttons(bot_token, chat_id):
     emoji_huawei = "🟥"
 
     # ایجاد دکمه شیشه‌ای
+    inline_keyboard = {"inline_keyboard": []}  # ایجاد پیش‌فرض برای دکمه‌ها
     if target_message_id:
-        inline_keyboard = {
-            "inline_keyboard": [
-                [{"text": f"قطعات سامسونگ {emoji_samsung}", "url": f"https://t.me/c/{chat_id.replace('-100', '')}/{target_message_id}"}],
-                [{"text": f"قطعات شیایومی {emoji_xiaomi}", "url": f"https://t.me/c/{chat_id.replace('-100', '')}/{target_message_id}"}],
-                [{"text": f"قطعات هوآوی {emoji_huawei}", "url": f"https://t.me/c/{chat_id.replace('-100', '')}/{target_message_id}"}]
-            ]
-        }
+        inline_keyboard["inline_keyboard"] = [
+            [{"text": f"قطعات سامسونگ {emoji_samsung}", "url": f"https://t.me/c/{chat_id.replace('-100', '')}/{target_message_id}"}],
+            [{"text": f"قطعات شیایومی {emoji_xiaomi}", "url": f"https://t.me/c/{chat_id.replace('-100', '')}/{target_message_id}"}],
+            [{"text": f"قطعات هوآوی {emoji_huawei}", "url": f"https://t.me/c/{chat_id.replace('-100', '')}/{target_message_id}"}]
+        ]
     else:
         logging.warning("هیچ پیامی با ایموجی پیدا نشد!")
-        inline_keyboard = {"inline_keyboard": []}  # بدون دکمه
 
     # ارسال پیام همراه با دکمه‌ها
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
@@ -190,12 +188,17 @@ def send_message_with_buttons(bot_token, chat_id):
         "text": final_message,
         "reply_markup": json.dumps(inline_keyboard),
     }
-    response = requests.post(url, json=params)
+    try:
+        response = requests.post(url, json=params, timeout=10)
+        if response.status_code == 200:
+            logging.info("✅ پیام همراه با دکمه شیشه‌ای ارسال شد!")
+        else:
+            logging.error(f"❌ خطا در ارسال پیام: {response.json()}")
+    except requests.exceptions.Timeout:
+        logging.error("❌ درخواست ارسال پیام به دلیل تایم‌اوت ناموفق بود!")
+    except Exception as e:
+        logging.error(f"❌ خطای غیرمنتظره هنگام ارسال پیام: {e}")
 
-    if response.status_code == 200:
-        logging.info("✅ پیام همراه با دکمه شیشه‌ای ارسال شد!")
-    else:
-        logging.error(f"❌ خطا در ارسال پیام: {response.json()}")
 
 
 def main():
