@@ -138,6 +138,17 @@ def find_latest_posts_with_emojis():
 
     return latest_links
 
+def get_latest_message_id():
+    bot = Bot(token=BOT_TOKEN)
+    updates = bot.get_updates()
+    for update in updates:
+        try:
+            message = update.message
+            if message and message.chat.id == int(CHAT_ID):
+                logging.info(f"Message ID: {message.message_id}, Text: {message.text}")
+        except AttributeError:
+            continue
+
 def send_final_message_with_buttons(latest_links):
     bot = Bot(token=BOT_TOKEN)
     
