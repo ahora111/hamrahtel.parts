@@ -61,16 +61,13 @@ def process_model(model_str):
         return f"{model_value_with_increase:,.0f}"
     return model_str
 
-import re
-
 def escape_markdown(text):
-    """
-    Escape تمام کاراکترهای خاص موردنیاز برای MarkdownV2 در تلگرام.
-    """
+    escape_chars = ['\\', '(', ')', '[', ']', '~', '*', '_', '-', '+', '>', '#', '.', '!', '|']
+    for char in escape_chars:
+        text = text.replace(char, '\\' + char)
     escape_chars = r'_*[\]()~`>#+-=|{}.!'
     return re.sub(r'([%s])' % re.escape(escape_chars), r'\\\1', text)
-
-
+    return text
 
 
 def split_message(message, max_length=4000):
