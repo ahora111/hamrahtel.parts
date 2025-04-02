@@ -171,12 +171,11 @@ def edit_message_with_buttons(latest_links):
     final_message_id = 12345  # شناسه پیام پایانی را اینجا تنظیم کنید
     
     # ایجاد دکمه‌ها
-    keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("قطعات سامسونگ📱", url=latest_links.get("🟦", ""))],
-        [InlineKeyboardButton("قطعات شیایومی📱", url=latest_links.get("🟨", ""))],
-        [InlineKeyboardButton("قطعات هوآوی📱", url=latest_links.get("🟥", ""))]
-    ])
-    
+keyboard = InlineKeyboardMarkup([
+    [InlineKeyboardButton("قطعات سامسونگ📱", url=latest_links.get("🟦", "https://example.com"))],
+    [InlineKeyboardButton("قطعات شیایومی📱", url=latest_links.get("🟨", "https://example.com"))],
+    [InlineKeyboardButton("قطعات هوآوی📱", url=latest_links.get("🟥", "https://example.com"))]
+])
     # ویرایش پیام پایانی
     bot.edit_message_reply_markup(chat_id=CHAT_ID, message_id=final_message_id, reply_markup=keyboard)
 
