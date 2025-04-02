@@ -115,15 +115,35 @@ def categorize_data(models):
             categorized_data[current_key].append(model)
     return categorized_data
 
-def send_message_with_buttons(bot_token, chat_id, message_ids):
-    """
-    ارسال پیام آخر همراه با دکمه‌های شیشه‌ای که به پیام‌های قبلی لینک می‌شود.
-    :param bot_token: توکن ربات
-    :param chat_id: شناسه چت
-    :param message_ids: دیکشنری با شناسه پیام‌های مرتبط
-    """
+# دریافت پیام‌های اخیر تلگرام
+def get_last_five_messages(bot_token, chat_id):
+    url = f"https://api.telegram.org/bot{bot_token}/getUpdates"
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        updates = response.json().get('result', [])
+        messages = [msg for msg in updates if 'message' in msg and str(msg['message']['chat']['id']) == chat_id]
+        return messages[-5:]  # دریافت ۵ پیام آخر
+    else:
+        logging.error("❌ خطا در دریافت پیام‌ها")
+        return []
+
+
+# پیدا کردن پیام دارای ایموجی
+def find_message_with_emojis(messages):
+    emoji_pattern = re.compile("[\U0001F600-\U0001F64F]|\U0001F300-\U0001F5FF|\U0001F680-\U0001F6FF|\U0001F1E0-\U0001F1FF")
+    for message in reversed(messages):  # بررسی از آخرین پیام
+        text = message['message'].get('text', '')
+        if emoji_pattern.search(text):
+            return message['message']['message_id']
+    return None
+
+
+# ارسال پیام همراه با دکمه‌های شیشه‌ای
+def send_message_with_buttons(bot_token, chat_id):
     final_message = """
-✅ لیست قطعات گوشیای بالا بروز میباشد. تحویل کالا بعد از ثبت خرید، ساعت 11:30 صبح روز بعد می باشد.
+✅ لیست قطعات گوشیای بالا بروز میباشد.
+تحویل کالا بعد از ثبت خرید، ساعت 11:30 صبح روز بعد می باشد.
 
 ✅ شماره کارت جهت واریز
 🔷 شماره شبا : IR970560611828006154229701
@@ -136,29 +156,36 @@ def send_message_with_buttons(bot_token, chat_id, message_ids):
 ✅ شماره تماس ثبت سفارش:
 📞 09371111558
 📞 02833991417
-"""
+    """
 
-    # دکمه‌های شیشه‌ای
-    inline_keyboard = {
-        "inline_keyboard": [
-            [{"text": "قطعات سامسونگ 📱", "url": f"https://t.me/c/{chat_id.replace('-100', '')}/{message_ids.get('🟦', '')}"}],
-            [{"text": "قطعات شیایومی 📱", "url": f"https://t.me/c/{chat_id.replace('-100', '')}/{message_ids.get('🟨', '')}"}],
-            [{"text": "قطعات هوآوی 📱", "url": f"https://t.me/c/{chat_id.replace('-100', '')}/{message_ids.get('🟥', '')}"}]
-        ]
-    }
+    # دریافت پیام‌های اخیر و پیدا کردن پیام با ایموجی
+    messages = get_last_five_messages(bot_token, chat_id)
+    target_message_id = find_message_with_emojis(messages)
 
+    # ایجاد دکمه شیشه‌ای
+    if target_message_id:
+        inline_keyboard = {
+            "inline_keyboard": [
+                [{"text": "قطعات سامسونگ 📱", "url": f"https://t.me/c/{chat_id.replace('-100', '')}/{target_message_id}"}],
+            ]
+        }
+    else:
+        logging.warning("هیچ پیامی با ایموجی پیدا نشد!")
+        inline_keyboard = {"inline_keyboard": []}  # بدون دکمه
+
+    # ارسال پیام همراه با دکمه‌ها
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     params = {
         "chat_id": chat_id,
         "text": final_message,
-        "reply_markup": json.dumps(inline_keyboard)
+        "reply_markup": json.dumps(inline_keyboard),
     }
     response = requests.post(url, json=params)
 
     if response.status_code == 200:
-        logging.info("✅ پیام پایانی همراه با دکمه‌ها ارسال شد!")
+        logging.info("✅ پیام همراه با دکمه شیشه‌ای ارسال شد!")
     else:
-        logging.error(f"❌ خطا در ارسال پیام پایانی: {response.json()}")
+        logging.error(f"❌ خطا در ارسال پیام: {response.json()}")
 
 def main():
     try:
