@@ -153,7 +153,8 @@ def main():
         logging.info("✅ داده‌ها آماده‌ی استخراج هستند!")
         scroll_page(driver)
         
-        models = extract_product_data(driver)
+        # استخراج داده‌ها
+        brands, models = extract_product_data(driver)
         driver.quit()
         
 
