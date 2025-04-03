@@ -61,15 +61,12 @@ def process_model(model_str):
         return f"{model_value_with_increase:,.0f}"
     return model_str
 
-import re
-
 def escape_markdown(text):
-    """
-    این تابع تمام کاراکترهای خاص MarkdownV2 را در متن تلگرام فرار می‌دهد.
-    """
-    escape_chars = r'_*[\]()~`>#+-=|{}.!'
-    return re.sub(r'([%s])' % re.escape(escape_chars), r'\\\1', text)
-    
+    escape_chars = ['\\', '(', ')', '[', ']', '~', '*', '_', '-', '+', '>', '#', '.', '!', '|', '`', ':']
+    for char in escape_chars:
+        text = text.replace(char, '\\' + char)
+    return text
+
 test_text = "قیمت گوشی - سامسونگ: 15.900.000 تومان"
 escaped_text = escape_markdown(test_text)
 print(escaped_text)
