@@ -11,7 +11,7 @@ from selenium.webdriver.support import expected_conditions as EC
 
 # تنظیمات تلگرام
 BOT_TOKEN = "8187924543:AAH0jZJvZdpq_34um8R_yCyHQvkorxczXNQ"
-CHAT_ID = "-1002683452872"
+CHAT_ID = "@list_parts_ahora"
 
 # تنظیمات لاگ‌گیری
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
