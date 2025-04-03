@@ -62,6 +62,10 @@ def process_model(model_str):
         return f"{model_value_with_increase:,.0f}"  # فرمت‌دهی عدد به‌صورت جداکننده ۳تایی
     return model_str
 
+processed_model = process_model(model)
+print(f"قبل: {model} → بعد: {processed_model}")
+
+
 test_prices = ["1,000,000", "2٬500٬000", "750000"]
 for price in test_prices:
     print(process_model(price))  # انتظار می‌رود خروجی 1.5٪ بیشتر باشد
