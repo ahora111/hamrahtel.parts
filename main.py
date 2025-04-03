@@ -98,23 +98,43 @@ def create_header(category):
 
 def create_footer():
     return "\n\n☎️ شماره های تماس :\n📞 09371111558\n📞 02833991417"
+import random
+
+# تعریف ایموجی‌های مخصوص برای دسته‌های خاص
+CATEGORY_EMOJIS = {
+    "HUAWEI": "🟥",
+    "REDMI_POCO": "🟨",
+    "LCD": "🟦"
+}
+
+# لیست ایموجی‌های احتمالی برای دسته‌بندی‌های جدید
+NEW_CATEGORY_EMOJIS = ["🟪", "🟩", "🟧", "🟫", "⬜", "⬛"]
 
 def categorize_data(models):
-    categorized_data = {"HUAWEI": [], "REDMI_POCO": [], "LCD": []}
+    categorized_data = {}
     current_key = None
+
     for model in models:
         if "HUAWEI" in model:
             current_key = "HUAWEI"
-            categorized_data[current_key].append(f"🟥 {model}")
-        elif "REDMI" in model or "poco" in model:
+        elif "REDMI" in model or "POCO" in model:
             current_key = "REDMI_POCO"
-            categorized_data[current_key].append(f"🟨 {model}")
         elif "LCD" in model:
             current_key = "LCD"
-            categorized_data[current_key].append(f"🟦 {model}")
-        elif current_key:
-            categorized_data[current_key].append(model)
+        else:
+            # اگر مدل در دسته‌های تعریف‌شده نباشد، بررسی می‌کنیم که آیا قبلاً دیده شده یا نه
+            if current_key is None or current_key not in categorized_data:
+                current_key = model.split()[0]  # استفاده از اولین کلمه به عنوان دسته جدید
+                if current_key not in CATEGORY_EMOJIS:
+                    CATEGORY_EMOJIS[current_key] = random.choice(NEW_CATEGORY_EMOJIS)  # اختصاص یک ایموجی تصادفی
+
+        if current_key not in categorized_data:
+            categorized_data[current_key] = []
+
+        categorized_data[current_key].append(f"{CATEGORY_EMOJIS[current_key]} {model}")
+
     return categorized_data
+
 
 def create_button_markup(samsung_message_id, xiaomi_message_id, huawei_message_id):
     return {
