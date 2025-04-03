@@ -54,21 +54,23 @@ def is_number(model_str):
     except ValueError:
         return False
 
+
+
 def process_model(model_str):
-    model_str = model_str.replace("٬", "").replace(",", "").strip()
-    if is_number(model_str):
-        model_value = float(model_str)  # تبدیل رشته به عدد اعشاری
-        model_value_with_increase = model_value * 1.015  # اضافه کردن 1.5 درصد
-        return f"{model_value_with_increase:,.0f}"  # فرمت‌دهی عدد به‌صورت جداکننده ۳تایی
-    return model_str
+    model_str = model_str.replace("٬", "").replace(",", "").strip()  # حذف جداکننده هزارگان
+    
+    if is_number(model_str):  # بررسی اگر مقدار عددی است
+        model_value = float(model_str)
+        model_value_with_increase = model_value * 1.015  # افزایش ۱.۵٪
+        return f"{model_value_with_increase:,.0f}"  # نمایش عدد با فرمت مناسب
+    return model_str  # اگر مقدار عددی نبود، بدون تغییر برگردان
+
 
 processed_model = process_model(model)
 print(f"قبل: {model} → بعد: {processed_model}")
 
-
-test_prices = ["1,000,000", "2٬500٬000", "750000"]
-for price in test_prices:
-    print(process_model(price))  # انتظار می‌رود خروجی 1.5٪ بیشتر باشد
+for model in models:
+    processed_model = process_model(model)  # پردازش مقدار مدل
 
 
 def escape_markdown(text):
@@ -129,8 +131,12 @@ def create_footer():
 def categorize_data(models):
     categorized_data = {"HUAWEI": [], "REDMI_POCO": [], "LCD": [], "NEW_CONTENT": []}
     current_key = None
+    
     for model in models:
-        processed_model = process_model(model)  # پردازش مقدار مدل (اضافه کردن 1.5%)
+        if not model.strip():
+            continue  # اگر مدل خالی بود، رد شود
+
+        processed_model = process_model(model)  # پردازش قیمت (افزودن ۱.۵٪)
         
         if "HUAWEI" in model:
             current_key = "HUAWEI"
@@ -147,6 +153,7 @@ def categorize_data(models):
             categorized_data["NEW_CONTENT"].append(f"🟩 {processed_model}")  # نمایش محتوا جدید با 🟩
     
     return categorized_data
+
 
 
 def create_button_markup(samsung_message_id, xiaomi_message_id, huawei_message_id, new_content_message_id):
