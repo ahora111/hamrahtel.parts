@@ -117,7 +117,7 @@ def create_footer():
     return "\n\n☎️ شماره های تماس :\n📞 09371111558\n📞 02833991417"
 
 def categorize_data(models):
-    categorized_data = {"HUAWEI": [], "REDMI_POCO": [], "LCD": []}
+    categorized_data = {"HUAWEI": [], "REDMI_POCO": [], "LCD": [], "NEW_CONTENT": []}
     current_key = None
     for model in models:
         if "HUAWEI" in model:
@@ -131,22 +131,29 @@ def categorize_data(models):
             categorized_data[current_key].append(f"🟦 {model}")
         elif current_key:
             categorized_data[current_key].append(model)
+        else:
+            categorized_data["NEW_CONTENT"].append(f"🟩 {model}")  # محتوا جدید با ایموجی 🟩
     return categorized_data
 
-def create_button_markup(samsung_message_id, xiaomi_message_id, huawei_message_id):
+
+def create_button_markup(samsung_message_id, xiaomi_message_id, huawei_message_id, new_content_message_id):
     return {
         "inline_keyboard": [
             [
                 {"text": "📱 لیست قطعات سامسونگ", "url": f"https://t.me/c/{CHAT_ID.replace('-100', '')}/{samsung_message_id}"}
             ],
             [
-                {"text": "📱 لیست قطعات شایومی", "url": f"https://t.me/c/{CHAT_ID.replace('-100', '')}/{xiaomi_message_id}"}
+                {"text": "📱 لیست قطعات شیایومی", "url": f"https://t.me/c/{CHAT_ID.replace('-100', '')}/{xiaomi_message_id}"}
             ],
             [
                 {"text": "📱 لیست قطعات هوآوی", "url": f"https://t.me/c/{CHAT_ID.replace('-100', '')}/{huawei_message_id}"}
+            ],
+            [
+                {"text": "🔍 مشاهده بیشتر", "url": f"https://t.me/c/{CHAT_ID.replace('-100', '')}/{new_content_message_id}"}
             ]
         ]
     }
+
 
 def main():
     try:
@@ -198,8 +205,9 @@ def main():
 📞 09371111558
 📞 02833991417
 """
-                button_markup = create_button_markup(samsung_message_id, xiaomi_message_id, huawei_message_id)
+                button_markup = create_button_markup(samsung_message_id, xiaomi_message_id, huawei_message_id, new_content_message_id)
                 send_telegram_message(final_message, BOT_TOKEN, CHAT_ID, reply_markup=button_markup)
+
         else:
             logging.warning("❌ داده‌ای برای ارسال وجود ندارد!")
 
