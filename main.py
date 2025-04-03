@@ -118,7 +118,7 @@ def create_button_markup():
     return {
         "inline_keyboard": [
             [
-                {"text": "📱 لیست سامسونگ", "url": "https://t.me/c/CHAT_ID/1"},
+                {"text": "📱 لیست سامسونگ", "url": f"https://t.me/c/{CHAT_ID.replace('-100', '')}/{samsung_message_id}"},
                 {"text": "📱 لیست شیایومی", "url": "https://t.me/c/CHAT_ID/2"}
             ],
             [
