@@ -129,21 +129,23 @@ def get_last_post_links(bot_token, chat_id):
 
     if "result" in response:
         messages = response["result"]
-        for msg in reversed(messages):
+        for msg in reversed(messages):  # بررسی پیام‌ها از آخر به اول
             if "message" in msg and "text" in msg["message"]:
                 text = msg["message"]["text"]
                 msg_id = msg["message"]["message_id"]
 
-                if "🟦" in text and not samsung_link:
+                if "🟦" in text and samsung_link is None:
                     samsung_link = f"https://t.me/{chat_id}/{msg_id}"
-                elif "🟨" in text and not xiaomi_link:
+                elif "🟨" in text and xiaomi_link is None:
                     xiaomi_link = f"https://t.me/{chat_id}/{msg_id}"
-                elif "🟥" in text and not huawei_link:
+                elif "🟥" in text and huawei_link is None:
                     huawei_link = f"https://t.me/{chat_id}/{msg_id}"
 
                 if samsung_link and xiaomi_link and huawei_link:
-                    break
+                    break  # اگر هر سه لینک پیدا شدند، متوقف شود
+
     return samsung_link, xiaomi_link, huawei_link
+
 
 def create_buttons(bot_token, chat_id):
     samsung_link, xiaomi_link, huawei_link = get_last_post_links(bot_token, chat_id)
@@ -155,23 +157,21 @@ def create_buttons(bot_token, chat_id):
     if huawei_link:
         buttons.append(InlineKeyboardButton("قطعات هوآوی📱", url=huawei_link))
     return InlineKeyboardMarkup([buttons])
-
-def send_telegram_message(message, bot_token, chat_id):
-    message = escape_markdown(message)  # 🔹 اطمینان از escape شدن تمام کاراکترهای خاص
-
-    message_parts = split_message(message)
-    for part in message_parts:
-        url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-        params = {
-            "chat_id": chat_id,
-            "text": part,
-            "parse_mode": "MarkdownV2"
-        }
-        response = requests.get(url, params=params)
-        if not response.json().get('ok'):
-            logging.error(f"❌ خطا در ارسال پیام: {response.json()}")
-            return
-    logging.info("✅ پیام ارسال شد!")
+    
+def send_message_with_buttons(bot_token, chat_id, message):
+    keyboard = create_buttons(bot_token, chat_id)
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    params = {
+        "chat_id": chat_id,
+        "text": message,
+        "parse_mode": "MarkdownV2",
+        "reply_markup": keyboard
+    }
+    response = requests.get(url, params=params)
+    if response.json().get('ok') is False:
+        logging.error(f"❌ خطا در ارسال پیام: {response.json()}")
+        return
+    logging.info("✅ پیام ارسال شد با دکمه‌ها!")
 
 
 def main():
