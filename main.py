@@ -130,19 +130,22 @@ def categorize_data(models):
     categorized_data = {"HUAWEI": [], "REDMI_POCO": [], "LCD": [], "NEW_CONTENT": []}
     current_key = None
     for model in models:
+        processed_model = process_model(model)  # پردازش مقدار مدل (اضافه کردن 1.5%)
+        
         if "HUAWEI" in model:
             current_key = "HUAWEI"
-            categorized_data[current_key].append(f"🟥 {model}")
+            categorized_data[current_key].append(f"🟥 {processed_model}")
         elif "REDMI" in model or "poco" in model:
             current_key = "REDMI_POCO"
-            categorized_data[current_key].append(f"🟨 {model}")
+            categorized_data[current_key].append(f"🟨 {processed_model}")
         elif "LCD" in model:
             current_key = "LCD"
-            categorized_data[current_key].append(f"🟦 {model}")
+            categorized_data[current_key].append(f"🟦 {processed_model}")
         elif current_key:
-            categorized_data[current_key].append(model)
+            categorized_data[current_key].append(processed_model)
         else:
-            categorized_data["NEW_CONTENT"].append(f"🟩 {model}")  # محتوا جدید با ایموجی 🟩
+            categorized_data["NEW_CONTENT"].append(f"🟩 {processed_model}")  # نمایش محتوا جدید با 🟩
+    
     return categorized_data
 
 
