@@ -57,10 +57,15 @@ def is_number(model_str):
 def process_model(model_str):
     model_str = model_str.replace("٬", "").replace(",", "").strip()
     if is_number(model_str):
-        model_value = float(model_str)
-        model_value_with_increase = model_value * 1.015
-        return f"{model_value_with_increase:,.0f}"
+        model_value = float(model_str)  # تبدیل رشته به عدد اعشاری
+        model_value_with_increase = model_value * 1.015  # اضافه کردن 1.5 درصد
+        return f"{model_value_with_increase:,.0f}"  # فرمت‌دهی عدد به‌صورت جداکننده ۳تایی
     return model_str
+
+test_prices = ["1,000,000", "2٬500٬000", "750000"]
+for price in test_prices:
+    print(process_model(price))  # انتظار می‌رود خروجی 1.5٪ بیشتر باشد
+
 
 def escape_markdown(text):
     escape_chars = ['\\', '(', ')', '[', ']', '~', '*', '_', '-', '+', '>', '#', '.', '!', '|']
