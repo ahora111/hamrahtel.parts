@@ -117,26 +117,31 @@ def categorize_data(models):
 
 # تابعی برای دریافت آخرین ۵ پیام
 def get_last_messages(bot_token, chat_id, count=5):
-    url = f"https://api.telegram.org/bot{bot_token}/getChatHistory"
-    params = {
-        "chat_id": chat_id,
-        "limit": count
-    }
-    response = requests.get(url, params=params)
+    url = f"https://api.telegram.org/bot{bot_token}/getUpdates"
+    response = requests.get(url)
     if response.status_code == 200:
-        messages = response.json().get('result', [])
-        print(messages)  # پیام‌ها را چاپ کنید تا ببینید ایموجی‌ها داخلشان هستند
-        return messages
+        data = response.json()
+        messages = [update.get("message", {}) for update in data.get("result", []) if "message" in update]
+        return messages[-count:]  # دریافت آخرین `count` پیام
     else:
         return []
+
+messages = get_last_messages(BOT_TOKEN, CHAT_ID)
+print("📩 پیام‌های دریافت‌شده از تلگرام:")
+for msg in messages:
+    print(msg)
 
 # تابعی برای بررسی پیام و یافتن لینک بر اساس ایموجی
 def find_message_with_emoji(messages, emoji):
     for message in messages:
-        print(f"بررسی پیام: {message['text']}")  # پیام را چاپ کنید
-        if emoji in message['text']:
+        text = message.get("text", "")
+        print(f"🔍 بررسی پیام: {text}")  # چاپ محتوای پیام برای بررسی
+        if emoji in text:
+            print(f"✅ پیام دارای {emoji} پیدا شد! ID: {message['message_id']}")
             return message['message_id']
+    print(f"❌ هیچ پیام دارای {emoji} یافت نشد!")
     return None
+
 
     
 # تابعی برای ارسال پیام با دکمه‌ها
