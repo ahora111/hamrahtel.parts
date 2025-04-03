@@ -81,8 +81,10 @@ def send_telegram_message(message, bot_token, chat_id, reply_markup=None):
         response = requests.post(url, json=params)
         if response.json().get('ok') is False:
             logging.error(f"❌ خطا در ارسال پیام: {response.json()}")
-            return
+            return None
+        message_id = response.json()["result"]["message_id"]
     logging.info("✅ پیام ارسال شد!")
+    return message_id
 
 def create_header(category):
     today_date = JalaliDate.today().strftime('%Y/%m/%d')
@@ -114,15 +116,17 @@ def categorize_data(models):
             categorized_data[current_key].append(model)
     return categorized_data
 
-def create_button_markup():
+def create_button_markup(samsung_message_id, xiaomi_message_id, huawei_message_id):
     return {
         "inline_keyboard": [
             [
-                {"text": "📱 لیست سامسونگ", "url": f"https://t.me/c/{CHAT_ID.replace('-100', '')}/{samsung_message_id}"},
-                {"text": "📱 لیست شیایومی", "url": "https://t.me/c/CHAT_ID/2"}
+                {"text": "📱 لیست سامسونگ", "url": f"https://t.me/c/{CHAT_ID.replace('-100', '')}/{samsung_message_id}"}
             ],
             [
-                {"text": "📱 لیست هوآوی", "url": "https://t.me/c/CHAT_ID/3"}
+                {"text": "📱 لیست شیایومی", "url": f"https://t.me/c/{CHAT_ID.replace('-100', '')}/{xiaomi_message_id}"}
+            ],
+            [
+                {"text": "📱 لیست هوآوی", "url": f"https://t.me/c/{CHAT_ID.replace('-100', '')}/{huawei_message_id}"}
             ]
         ]
     }
@@ -144,15 +148,25 @@ def main():
 
         if models:
             categorized_data = categorize_data(models)
+            samsung_message_id = None
+            xiaomi_message_id = None
+            huawei_message_id = None
+
             for category, messages in categorized_data.items():
                 if messages:
                     header = create_header(category)
                     footer = create_footer()
                     message = header + "\n".join(messages) + footer
-                    send_telegram_message(message, BOT_TOKEN, CHAT_ID)
+                    message_id = send_telegram_message(message, BOT_TOKEN, CHAT_ID)
+                    if category == "LCD":
+                        samsung_message_id = message_id
+                    elif category == "REDMI_POCO":
+                        xiaomi_message_id = message_id
+                    elif category == "HUAWEI":
+                        huawei_message_id = message_id
 
-            # ارسال پیام نهایی با دکمه‌ها
-            final_message = """
+            if samsung_message_id and xiaomi_message_id and huawei_message_id:
+                final_message = """
 ✅ لیست قطعات گوشیای بالا بروز میباشد. تحویل کالا بعد از ثبت خرید، ساعت 11:30 صبح روز بعد می باشد.
 
 ✅ شماره کارت جهت واریز
@@ -167,8 +181,8 @@ def main():
 📞 09371111558
 📞 02833991417
 """
-            button_markup = create_button_markup()
-            send_telegram_message(final_message, BOT_TOKEN, CHAT_ID, reply_markup=button_markup)
+                button_markup = create_button_markup(samsung_message_id, xiaomi_message_id, huawei_message_id)
+                send_telegram_message(final_message, BOT_TOKEN, CHAT_ID, reply_markup=button_markup)
         else:
             logging.warning("❌ داده‌ای برای ارسال وجود ندارد!")
 
