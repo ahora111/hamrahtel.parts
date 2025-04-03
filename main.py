@@ -70,21 +70,38 @@ def escape_markdown(text):
 def split_message(message, max_length=4000):
     return [message[i:i+max_length] for i in range(0, len(message), max_length)]
 
-def send_telegram_message(message, bot_token, chat_id, reply_markup=None):
+import time
+
+def send_telegram_message(message, bot_token, chat_id, reply_markup=None, retries=3, delay=5):
     message_parts = split_message(message)
+    
     for part in message_parts:
         part = escape_markdown(part)
         url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
         params = {"chat_id": chat_id, "text": part, "parse_mode": "MarkdownV2"}
+        
         if reply_markup:
-            params["reply_markup"] = json.dumps(reply_markup)  # تبدیل `reply_markup` به JSON
-        response = requests.post(url, json=params)
-        if response.json().get('ok') is False:
-            logging.error(f"❌ خطا در ارسال پیام: {response.json()}")
-            return None
-        message_id = response.json()["result"]["message_id"]
-    logging.info("✅ پیام ارسال شد!")
-    return message_id
+            params["reply_markup"] = json.dumps(reply_markup)
+        
+        for attempt in range(retries):
+            try:
+                response = requests.post(url, json=params, timeout=10)
+                response_data = response.json()
+                
+                if response_data.get("ok"):
+                    logging.info("✅ پیام با موفقیت ارسال شد!")
+                    return response_data["result"]["message_id"]
+                else:
+                    logging.error(f"❌ خطا در ارسال پیام: {response_data}")
+            
+            except requests.RequestException as e:
+                logging.error(f"❌ خطای اتصال در ارسال پیام (تلاش {attempt + 1} از {retries}): {e}")
+            
+            time.sleep(delay)  # وقفه قبل از تلاش مجدد
+        
+        logging.error("❌ تمامی تلاش‌ها برای ارسال پیام ناموفق بود!")
+        return None
+
 
 def create_header(category):
     today_date = JalaliDate.today().strftime('%Y/%m/%d')
@@ -98,43 +115,23 @@ def create_header(category):
 
 def create_footer():
     return "\n\n☎️ شماره های تماس :\n📞 09371111558\n📞 02833991417"
-import random
-
-# تعریف ایموجی‌های مخصوص برای دسته‌های خاص
-CATEGORY_EMOJIS = {
-    "HUAWEI": "🟥",
-    "REDMI_POCO": "🟨",
-    "LCD": "🟦"
-}
-
-# لیست ایموجی‌های احتمالی برای دسته‌بندی‌های جدید
-NEW_CATEGORY_EMOJIS = ["🟪", "🟩", "🟧", "🟫", "⬜", "⬛"]
 
 def categorize_data(models):
-    categorized_data = {}
+    categorized_data = {"HUAWEI": [], "REDMI_POCO": [], "LCD": []}
     current_key = None
-
     for model in models:
         if "HUAWEI" in model:
             current_key = "HUAWEI"
-        elif "REDMI" in model or "POCO" in model:
+            categorized_data[current_key].append(f"🟥 {model}")
+        elif "REDMI" in model or "poco" in model:
             current_key = "REDMI_POCO"
+            categorized_data[current_key].append(f"🟨 {model}")
         elif "LCD" in model:
             current_key = "LCD"
-        else:
-            # اگر مدل در دسته‌های تعریف‌شده نباشد، بررسی می‌کنیم که آیا قبلاً دیده شده یا نه
-            if current_key is None or current_key not in categorized_data:
-                current_key = model.split()[0]  # استفاده از اولین کلمه به عنوان دسته جدید
-                if current_key not in CATEGORY_EMOJIS:
-                    CATEGORY_EMOJIS[current_key] = random.choice(NEW_CATEGORY_EMOJIS)  # اختصاص یک ایموجی تصادفی
-
-        if current_key not in categorized_data:
-            categorized_data[current_key] = []
-
-        categorized_data[current_key].append(f"{CATEGORY_EMOJIS[current_key]} {model}")
-
+            categorized_data[current_key].append(f"🟦 {model}")
+        elif current_key:
+            categorized_data[current_key].append(model)
     return categorized_data
-
 
 def create_button_markup(samsung_message_id, xiaomi_message_id, huawei_message_id):
     return {
@@ -152,6 +149,8 @@ def create_button_markup(samsung_message_id, xiaomi_message_id, huawei_message_i
     }
 
 def main():
+    driver = None  # مقداردهی اولیه
+    
     try:
         driver = get_driver()
         if not driver:
@@ -161,10 +160,19 @@ def main():
         driver.get('https://hamrahtel.com/quick-checkout?category=mobile-parts')
         WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.CLASS_NAME, 'mantine-Text-root')))
         logging.info("✅ داده‌ها آماده‌ی استخراج هستند!")
+        
         scroll_page(driver)
-
         models = extract_product_data(driver)
-        driver.quit()
+
+    except Exception as e:
+        logging.error(f"❌ خطا: {e}")
+        return  # اگر خطا رخ بده، نیازی به ادامه اجرا نیست
+
+    finally:
+        if driver:
+            driver.quit()  # بستن مرورگر در هر حالتی
+            logging.info("✅ WebDriver بسته شد.")
+
 
         if models:
             categorized_data = categorize_data(models)
