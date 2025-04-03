@@ -202,19 +202,19 @@ def main():
                     send_telegram_message(message, BOT_TOKEN, CHAT_ID)
 
                 # دریافت ۵ پیام آخر
-    messages = get_last_messages(BOT_TOKEN, CHAT_ID)
+                messages = get_last_messages(BOT_TOKEN, CHAT_ID)
     
-    # پیدا کردن پیام‌های مرتبط با هر ایموجی
-    button_links = {}
-    button_links['🟦'] = find_message_with_emoji(messages, '🟦')
-    button_links['🟨'] = find_message_with_emoji(messages, '🟨')
-    button_links['🟥'] = find_message_with_emoji(messages, '🟥')
+                # پیدا کردن پیام‌های مرتبط با هر ایموجی
+                button_links = {}
+                button_links['🟦'] = find_message_with_emoji(messages, '🟦')
+                button_links['🟨'] = find_message_with_emoji(messages, '🟨')
+                button_links['🟥'] = find_message_with_emoji(messages, '🟥')
     
-    # پیام و دکمه‌ها را ارسال می‌کنیم
-    if all(button_links.values()):
-        send_message_with_buttons(BOT_TOKEN, CHAT_ID, "✅ لیست قطعات موبایل بروز شد!", button_links)
-    else:
-        print("❌ همه ایموجی‌ها پیدا نشدند!")
+                # پیام و دکمه‌ها را ارسال می‌کنیم
+                if all(button_links.values()):
+                    send_message_with_buttons(BOT_TOKEN, CHAT_ID, "✅ لیست قطعات موبایل بروز شد!", button_links)
+                else:
+                    print("❌ همه ایموجی‌ها پیدا نشدند!")
 
             # ارسال پیام پایانی
             send_final_message(BOT_TOKEN, CHAT_ID)
