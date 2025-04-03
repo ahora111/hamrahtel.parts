@@ -65,6 +65,20 @@ def escape_markdown(text):
         text = text.replace(char, '\\' + char)
     return text
 
+
+
+import requests
+
+BOT_TOKEN = "توکن بات خودت را بگذار"
+
+url = f"https://api.telegram.org/bot{BOT_TOKEN}/getUpdates"
+response = requests.get(url)
+
+print(response.json())
+
+
+
+
 def split_message(message, max_length=4000):
     return [message[i:i+max_length] for i in range(0, len(message), max_length)]
 
