@@ -137,20 +137,18 @@ def create_button_markup(samsung_message_id, xiaomi_message_id, huawei_message_i
     return {
         "inline_keyboard": [
             [
-                {"text": "📱 لیست سامسونگ", "url": f"https://t.me/c/{CHAT_ID.replace('-100', '')}/{samsung_message_id}"}
+                {"text": "📱 لیست قطعات سامسونگ", "url": f"https://t.me/c/{CHAT_ID.replace('-100', '')}/{samsung_message_id}"}
             ],
             [
-                {"text": "📱 لیست شیایومی", "url": f"https://t.me/c/{CHAT_ID.replace('-100', '')}/{xiaomi_message_id}"}
+                {"text": "📱 لیست قطعات شایومی", "url": f"https://t.me/c/{CHAT_ID.replace('-100', '')}/{xiaomi_message_id}"}
             ],
             [
-                {"text": "📱 لیست هوآوی", "url": f"https://t.me/c/{CHAT_ID.replace('-100', '')}/{huawei_message_id}"}
+                {"text": "📱 لیست قطعات هوآوی", "url": f"https://t.me/c/{CHAT_ID.replace('-100', '')}/{huawei_message_id}"}
             ]
         ]
     }
 
 def main():
-    driver = None  # مقداردهی اولیه
-    
     try:
         driver = get_driver()
         if not driver:
@@ -160,20 +158,10 @@ def main():
         driver.get('https://hamrahtel.com/quick-checkout?category=mobile-parts')
         WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.CLASS_NAME, 'mantine-Text-root')))
         logging.info("✅ داده‌ها آماده‌ی استخراج هستند!")
-        
         scroll_page(driver)
+
         models = extract_product_data(driver)
-
-    except Exception as e:
-        logging.error(f"❌ خطا: {e}")
-        return  # اگر خطا رخ بده، نیازی به ادامه اجرا نیست
-
-    finally:
-        if driver:
-            driver.quit()  # بستن مرورگر در هر حالتی
-            logging.info("✅ WebDriver بسته شد.")
-
-
+        driver.quit()
 
         if models:
             categorized_data = categorize_data(models)
