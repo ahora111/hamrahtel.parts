@@ -175,6 +175,7 @@ def main():
             samsung_message_id = None
             xiaomi_message_id = None
             huawei_message_id = None
+            new_content_message_id = None  # متغیر جدید برای شناسه پیام محتوا جدید
 
             for category, messages in categorized_data.items():
                 if messages:
@@ -188,6 +189,8 @@ def main():
                         xiaomi_message_id = message_id
                     elif category == "HUAWEI":
                         huawei_message_id = message_id
+                    elif category == "NEW_CONTENT":
+                        new_content_message_id = message_id  # ذخیره شناسه پیام محتوا جدید
 
             if samsung_message_id and xiaomi_message_id and huawei_message_id:
                 final_message = """
@@ -207,12 +210,11 @@ def main():
 """
                 button_markup = create_button_markup(samsung_message_id, xiaomi_message_id, huawei_message_id, new_content_message_id)
                 send_telegram_message(final_message, BOT_TOKEN, CHAT_ID, reply_markup=button_markup)
-
         else:
             logging.warning("❌ داده‌ای برای ارسال وجود ندارد!")
 
     except Exception as e:
         logging.error(f"❌ خطا: {e}")
-
+        
 if __name__ == "__main__":
     main()
