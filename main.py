@@ -64,8 +64,9 @@ def process_model(model_str):
 def escape_markdown(text):
     escape_chars = ['\\', '(', ')', '[', ']', '~', '*', '_', '-', '+', '>', '#', '.', '!', '|', '`', ':']
     for char in escape_chars:
-        text = text.replace(char, '\\' + char)
+        text = text.replace(char, f'\\{char}')
     return text
+
 
 test_text = "قیمت گوشی - سامسونگ: 15.900.000 تومان"
 escaped_text = escape_markdown(test_text)
@@ -78,21 +79,15 @@ def split_message(message, max_length=4000):
     return [message[i:i+max_length] for i in range(0, len(message), max_length)]
 
 def send_telegram_message(message, bot_token, chat_id):
-    message = escape_markdown(message)  # 🔹 اطمینان از escape شدن تمام کاراکترهای خاص
+    escaped_message = escape_markdown(message)  # فرار دادن کاراکترها
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    params = {"chat_id": chat_id, "text": escaped_message, "parse_mode": "MarkdownV2"}
+    response = requests.get(url, params=params)
+    if not response.json().get('ok'):
+        logging.error(f"❌ خطا در ارسال پیام: {response.json()}")
+    else:
+        logging.info("✅ پیام ارسال شد!")
 
-    message_parts = split_message(message)
-    for part in message_parts:
-        url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-        params = {
-            "chat_id": chat_id,
-            "text": part,
-            "parse_mode": "MarkdownV2"
-        }
-        response = requests.get(url, params=params)
-        if not response.json().get('ok'):
-            logging.error(f"❌ خطا در ارسال پیام: {response.json()}")
-            return
-    logging.info("✅ پیام ارسال شد!")
 
 
 from persiantools.jdatetime import JalaliDate
