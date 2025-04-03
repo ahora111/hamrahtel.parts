@@ -174,6 +174,7 @@ def main():
             logging.info("✅ WebDriver بسته شد.")
 
 
+
         if models:
             categorized_data = categorize_data(models)
             samsung_message_id = None
