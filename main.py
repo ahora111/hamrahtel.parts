@@ -66,11 +66,12 @@ def process_model(model_str):
     return model_str  # اگر مقدار عددی نبود، بدون تغییر برگردان
 
 
-processed_model = process_model(model)
-print(f"قبل: {model} → بعد: {processed_model}")
-
 for model in models:
     processed_model = process_model(model)  # پردازش مقدار مدل
+    print(f"قبل: {model} → بعد: {processed_model}")
+
+
+
 
 
 def escape_markdown(text):
