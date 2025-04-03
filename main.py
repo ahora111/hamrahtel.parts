@@ -114,6 +114,51 @@ def categorize_data(models):
             categorized_data[current_key].append(model)
     return categorized_data
 
+
+# تابعی برای دریافت آخرین ۵ پیام
+def get_last_messages(bot_token, chat_id, count=5):
+    url = f"https://api.telegram.org/bot{bot_token}/getChatHistory"
+    params = {
+        "chat_id": chat_id,
+        "limit": count
+    }
+    response = requests.get(url, params=params)
+    if response.status_code == 200:
+        return response.json().get('result', [])
+    else:
+        return []
+
+# تابعی برای بررسی پیام و یافتن لینک بر اساس ایموجی
+def find_message_with_emoji(messages, emoji):
+    for message in messages:
+        if emoji in message['text']:
+            return message['message_id']
+    return None
+    
+# تابعی برای ارسال پیام با دکمه‌ها
+def send_message_with_buttons(bot_token, chat_id, message, button_links):
+    # دکمه‌ها
+    buttons = [
+        {"text": "قطعات سامسونگ📱", "url": button_links.get('🟦')},
+        {"text": "قطعات شیایومی 📱", "url": button_links.get('🟨')},
+        {"text": "قطعات هوآوی 📱", "url": button_links.get('🟥')}
+    ]
+    
+    # ساخت ساختار پیام با دکمه‌ها
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    params = {
+        "chat_id": chat_id,
+        "text": message,
+        "reply_markup": {"inline_keyboard": [[button] for button in buttons]}
+    }
+    response = requests.get(url, params=params)
+    if response.json().get('ok'):
+        print("✅ پیام با دکمه‌ها ارسال شد!")
+    else:
+        print("❌ خطا در ارسال پیام!")
+        
+
+
 def send_final_message(bot_token, chat_id):
     final_message = """
 ✅ لیست قطعات گوشیای بالا بروز میباشد. تحویل کالا بعد از ثبت خرید، ساعت 11:30 صبح روز بعد می باشد.
@@ -155,6 +200,22 @@ def main():
                     footer = create_footer()
                     message = header + "\n".join(messages) + footer
                     send_telegram_message(message, BOT_TOKEN, CHAT_ID)
+
+                # دریافت ۵ پیام آخر
+    messages = get_last_messages(BOT_TOKEN, CHAT_ID)
+    
+    # پیدا کردن پیام‌های مرتبط با هر ایموجی
+    button_links = {}
+    button_links['🟦'] = find_message_with_emoji(messages, '🟦')
+    button_links['🟨'] = find_message_with_emoji(messages, '🟨')
+    button_links['🟥'] = find_message_with_emoji(messages, '🟥')
+    
+    # پیام و دکمه‌ها را ارسال می‌کنیم
+    if all(button_links.values()):
+        send_message_with_buttons(BOT_TOKEN, CHAT_ID, "✅ لیست قطعات موبایل بروز شد!", button_links)
+    else:
+        print("❌ همه ایموجی‌ها پیدا نشدند!")
+
             # ارسال پیام پایانی
             send_final_message(BOT_TOKEN, CHAT_ID)
         else:
