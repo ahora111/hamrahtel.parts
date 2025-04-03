@@ -129,18 +129,27 @@ def get_last_messages(bot_token, chat_id, count=5):
 messages = get_last_messages(BOT_TOKEN, CHAT_ID)
 print("📩 پیام‌های دریافت‌شده از تلگرام:")
 for msg in messages:
-    print(msg)
+    print(msg)  # نمایش کامل پیام برای تحلیل بهتر
+
 
 # تابعی برای بررسی پیام و یافتن لینک بر اساس ایموجی
+import re
+
 def find_message_with_emoji(messages, emoji):
     for message in messages:
-        text = message.get("text", "")
-        print(f"🔍 بررسی پیام: {text}")  # چاپ محتوای پیام برای بررسی
-        if emoji in text:
+        text = message.get("text", "").strip()
+        print(f"🔍 بررسی پیام: {repr(text)}")  # `repr()` برای نمایش کاراکترهای مخفی
+        if re.search(re.escape(emoji), text):
             print(f"✅ پیام دارای {emoji} پیدا شد! ID: {message['message_id']}")
             return message['message_id']
     print(f"❌ هیچ پیام دارای {emoji} یافت نشد!")
     return None
+
+url = f"https://api.telegram.org/bot{BOT_TOKEN}/getChatHistory"
+params = {"chat_id": CHAT_ID, "limit": 5}
+
+response = requests.get(url, params=params)
+print(response.json())  # بررسی پاسخ API
 
 
     
