@@ -114,15 +114,18 @@ def categorize_data(models):
             categorized_data[current_key].append(model)
     return categorized_data
 
-def create_button_markup(message_ids):
-    button_markup = {"inline_keyboard": []}
-    if message_ids.get("LCD"):
-        button_markup["inline_keyboard"].append([{"text": "📱 لیست سامسونگ", "url": f"https://t.me/c/{CHAT_ID.replace('-100', '')}/{message_ids['LCD']}"}])
-    if message_ids.get("REDMI_POCO"):
-        button_markup["inline_keyboard"].append([{"text": "📱 لیست شیایومی", "url": f"https://t.me/c/{CHAT_ID.replace('-100', '')}/{message_ids['REDMI_POCO']}"}])
-    if message_ids.get("HUAWEI"):
-        button_markup["inline_keyboard"].append([{"text": "📱 لیست هوآوی", "url": f"https://t.me/c/{CHAT_ID.replace('-100', '')}/{message_ids['HUAWEI']}"}])
-    return button_markup
+def create_button_markup():
+    return {
+        "inline_keyboard": [
+            [
+                {"text": "📱 لیست سامسونگ", "url": "https://t.me/c/CHAT_ID/1"},
+                {"text": "📱 لیست شیایومی", "url": "https://t.me/c/CHAT_ID/2"}
+            ],
+            [
+                {"text": "📱 لیست هوآوی", "url": "https://t.me/c/CHAT_ID/3"}
+            ]
+        ]
+    }
 
 def main():
     try:
@@ -141,23 +144,15 @@ def main():
 
         if models:
             categorized_data = categorize_data(models)
-            message_ids = {}
             for category, messages in categorized_data.items():
                 if messages:
                     header = create_header(category)
                     footer = create_footer()
                     message = header + "\n".join(messages) + footer
-                    message_id = send_telegram_message(message, BOT_TOKEN, CHAT_ID)
+                    send_telegram_message(message, BOT_TOKEN, CHAT_ID)
 
-                    if category == "LCD":
-                        message_ids["LCD"] = message_id
-                    elif category == "REDMI_POCO":
-                        message_ids["REDMI_POCO"] = message_id
-                    elif category == "HUAWEI":
-                        message_ids["HUAWEI"] = message_id
-
-            if message_ids:
-                final_message = """
+            # ارسال پیام نهایی با دکمه‌ها
+            final_message = """
 ✅ لیست قطعات گوشیای بالا بروز میباشد. تحویل کالا بعد از ثبت خرید، ساعت 11:30 صبح روز بعد می باشد.
 
 ✅ شماره کارت جهت واریز
@@ -172,8 +167,8 @@ def main():
 📞 09371111558
 📞 02833991417
 """
-                button_markup = create_button_markup(message_ids)
-                send_telegram_message(final_message, BOT_TOKEN, CHAT_ID, reply_markup=button_markup)
+            button_markup = create_button_markup()
+            send_telegram_message(final_message, BOT_TOKEN, CHAT_ID, reply_markup=button_markup)
         else:
             logging.warning("❌ داده‌ای برای ارسال وجود ندارد!")
 
