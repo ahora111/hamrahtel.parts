@@ -147,9 +147,9 @@ def find_message_with_emoji(messages, emoji):
 
 url = f"https://api.telegram.org/bot{BOT_TOKEN}/getChatHistory"
 params = {"chat_id": CHAT_ID, "limit": 5}
-
 response = requests.get(url, params=params)
-print(response.json())  # بررسی پاسخ API
+print(response.json())  # خروجی را ارسال کن
+
 
 
     
