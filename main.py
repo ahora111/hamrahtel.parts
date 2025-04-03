@@ -43,9 +43,9 @@ def scroll_page(driver, scroll_pause_time=2):
 
 def extract_product_data(driver):
     product_elements = driver.find_elements(By.CLASS_NAME, 'mantine-Text-root')
-    models = [product.text.strip().replace("تومانءء", "") for product in product_elements]
-    models = [product.text.strip().replace("جستجو در مدل‌ها", "") for product in product_elements]
+    models = [product.text.strip().replace("جستجو در مدل‌ها", "").replace("تومانءء", "") for product in product_elements]
     return models[25:]
+
 
 def is_number(model_str):
     try:
