@@ -62,12 +62,11 @@ def process_model(model_str):
     return model_str
 
 def escape_markdown(text):
-    escape_chars = ['\\', '(', ')', '[', ']', '~', '*', '_', '-', '+', '>', '#', '.', '!', '|']
+    escape_chars = ['\\', '(', ')', '[', ']', '~', '*', '_', '-', '+', '>', '#', '.', '!', '|', '`']
     for char in escape_chars:
         text = text.replace(char, '\\' + char)
-    escape_chars = r'_*[\]()~`>#+-=|{}.!'
-    return re.sub(r'([%s])' % re.escape(escape_chars), r'\\\1', text)
     return text
+
 
 
 def split_message(message, max_length=4000):
