@@ -124,16 +124,20 @@ def get_last_messages(bot_token, chat_id, count=5):
     }
     response = requests.get(url, params=params)
     if response.status_code == 200:
-        return response.json().get('result', [])
+        messages = response.json().get('result', [])
+        print(messages)  # پیام‌ها را چاپ کنید تا ببینید ایموجی‌ها داخلشان هستند
+        return messages
     else:
         return []
 
 # تابعی برای بررسی پیام و یافتن لینک بر اساس ایموجی
 def find_message_with_emoji(messages, emoji):
     for message in messages:
+        print(f"بررسی پیام: {message['text']}")  # پیام را چاپ کنید
         if emoji in message['text']:
             return message['message_id']
     return None
+
     
 # تابعی برای ارسال پیام با دکمه‌ها
 def send_message_with_buttons(bot_token, chat_id, message, button_links):
