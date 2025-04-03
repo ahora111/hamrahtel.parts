@@ -4,11 +4,17 @@ import requests
 import logging
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from persiantools.jdatetime import JalaliDate
+
+options = webdriver.ChromeOptions()
+service = Service(ChromeDriverManager().install())
+driver = webdriver.Chrome(service=service, options=options)
+
 
 # تنظیمات تلگرام
 BOT_TOKEN = "8187924543:AAH0jZJvZdpq_34um8R_yCyHQvkorxczXNQ"
