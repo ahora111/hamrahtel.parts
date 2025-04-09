@@ -43,9 +43,10 @@ def scroll_page(driver, scroll_pause_time=2):
 
 def extract_product_data(driver):
     product_elements = driver.find_elements(By.CLASS_NAME, 'mantine-Text-root')
-    models = [product.text.strip().replace("جستجو در مدل‌ها", "").replace("تومانءء", "") for product in product_elements]
+    models = [product.text.strip().replace("تومانءء", "") for product in product_elements]
+        # ثبت داده‌های استخراج‌شده برای بررسی
+    logging.info(f"📥 داده‌های استخراج‌شده: {models}")
     return models[25:]
-
 
 def is_number(model_str):
     try:
@@ -54,25 +55,13 @@ def is_number(model_str):
     except ValueError:
         return False
 
-
-
 def process_model(model_str):
-    model_str = model_str.replace("٬", "").replace(",", "").strip()  # حذف جداکننده هزارگان
-    
-    if is_number(model_str):  # بررسی اگر مقدار عددی است
+    model_str = model_str.replace("٬", "").replace(",", "").strip()
+    if is_number(model_str):
         model_value = float(model_str)
-        model_value_with_increase = model_value * 1.015  # افزایش ۱.۵٪
-        return f"{model_value_with_increase:,.0f}"  # نمایش عدد با فرمت مناسب
-    return model_str  # اگر مقدار عددی نبود، بدون تغییر برگردان
-
-
-for model in models:
-    processed_model = process_model(model)  # پردازش مقدار مدل
-    print(f"قبل: {model} → بعد: {processed_model}")
-
-
-
-
+        model_value_with_increase = model_value * 1.015
+        return f"{model_value_with_increase:,.0f}"
+    return model_str
 
 def escape_markdown(text):
     escape_chars = ['\\', '(', ')', '[', ']', '~', '*', '_', '-', '+', '>', '#', '.', '!', '|']
@@ -130,34 +119,23 @@ def create_footer():
     return "\n\n☎️ شماره های تماس :\n📞 09371111558\n📞 02833991417"
 
 def categorize_data(models):
-    categorized_data = {"HUAWEI": [], "REDMI_POCO": [], "LCD": [], "NEW_CONTENT": []}
+    categorized_data = {"HUAWEI": [], "REDMI_POCO": [], "LCD": []}
     current_key = None
-    
     for model in models:
-        if not model.strip():
-            continue  # اگر مدل خالی بود، رد شود
-
-        processed_model = process_model(model)  # پردازش قیمت (افزودن ۱.۵٪)
-        
         if "HUAWEI" in model:
             current_key = "HUAWEI"
-            categorized_data[current_key].append(f"🟥 {processed_model}")
+            categorized_data[current_key].append(f"🟥 {model}")
         elif "REDMI" in model or "poco" in model:
             current_key = "REDMI_POCO"
-            categorized_data[current_key].append(f"🟨 {processed_model}")
+            categorized_data[current_key].append(f"🟨 {model}")
         elif "LCD" in model:
             current_key = "LCD"
-            categorized_data[current_key].append(f"🟦 {processed_model}")
+            categorized_data[current_key].append(f"🟦 {model}")
         elif current_key:
-            categorized_data[current_key].append(processed_model)
-        else:
-            categorized_data["NEW_CONTENT"].append(f"🟩 {processed_model}")  # نمایش محتوا جدید با 🟩
-    
+            categorized_data[current_key].append(model)
     return categorized_data
 
-
-
-def create_button_markup(samsung_message_id, xiaomi_message_id, huawei_message_id, new_content_message_id):
+def create_button_markup(samsung_message_id, xiaomi_message_id, huawei_message_id):
     return {
         "inline_keyboard": [
             [
@@ -168,13 +146,9 @@ def create_button_markup(samsung_message_id, xiaomi_message_id, huawei_message_i
             ],
             [
                 {"text": "📱 لیست قطعات هوآوی", "url": f"https://t.me/c/{CHAT_ID.replace('-100', '')}/{huawei_message_id}"}
-            ],
-            [
-                {"text": "🔍 مشاهده بیشتر", "url": f"https://t.me/c/{CHAT_ID.replace('-100', '')}/{new_content_message_id}"}
             ]
         ]
     }
-
 
 def main():
     try:
@@ -196,7 +170,6 @@ def main():
             samsung_message_id = None
             xiaomi_message_id = None
             huawei_message_id = None
-            new_content_message_id = None  # متغیر جدید برای شناسه پیام محتوا جدید
 
             for category, messages in categorized_data.items():
                 if messages:
@@ -210,8 +183,6 @@ def main():
                         xiaomi_message_id = message_id
                     elif category == "HUAWEI":
                         huawei_message_id = message_id
-                    elif category == "NEW_CONTENT":
-                        new_content_message_id = message_id  # ذخیره شناسه پیام محتوا جدید
 
             if samsung_message_id and xiaomi_message_id and huawei_message_id:
                 final_message = """
@@ -229,13 +200,13 @@ def main():
 📞 09371111558
 📞 02833991417
 """
-                button_markup = create_button_markup(samsung_message_id, xiaomi_message_id, huawei_message_id, new_content_message_id)
+                button_markup = create_button_markup(samsung_message_id, xiaomi_message_id, huawei_message_id)
                 send_telegram_message(final_message, BOT_TOKEN, CHAT_ID, reply_markup=button_markup)
         else:
             logging.warning("❌ داده‌ای برای ارسال وجود ندارد!")
 
     except Exception as e:
         logging.error(f"❌ خطا: {e}")
-        
+
 if __name__ == "__main__":
     main()
