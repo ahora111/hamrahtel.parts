@@ -55,12 +55,12 @@ def is_number(model_str):
     except ValueError:
         return False
 
-def process_model(model_str):
+def process_model_with_percentage(model_str, percentage=0.03):
     model_str = model_str.replace("٬", "").replace(",", "").strip()
     if is_number(model_str):
         model_value = float(model_str)
-        model_value_with_increase = model_value * 1.015
-        return f"{model_value_with_increase:,.0f}"
+        model_value_with_increase = model_value * (1 + percentage)
+        return f"{model_value_with_increase:,.0f}".replace(",", "٬")
     return model_str
 
 def escape_markdown(text):
@@ -132,7 +132,8 @@ def categorize_data(models):
             current_key = "LCD"
             categorized_data[current_key].append(f"🟦 {model}")
         elif current_key:
-            categorized_data[current_key].append(model)
+            processed_model = process_model_with_percentage(model)
+            categorized_data[current_key].append(processed_model)
     return categorized_data
 
 def create_button_markup(samsung_message_id, xiaomi_message_id, huawei_message_id):
