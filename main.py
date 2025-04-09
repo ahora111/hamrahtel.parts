@@ -61,7 +61,7 @@ def process_model_with_rounding(model_str, percentage=0.03, addition=60000):
     if is_number(model_str):
         model_value = float(model_str)
         # اعمال افزایش ۳٪، اضافه کردن ۶۰٬۰۰۰، و گرد کردن خروجی
-        model_value_with_changes = round((model_value * (5 + percentage)) + addition)
+        model_value_with_changes = round((model_value * (1 + percentage)) + addition)
         # بازگشت مقدار به فرمت مورد نظر
         return f"{model_value_with_changes:,}".replace(",", "٬")
     return model_str
