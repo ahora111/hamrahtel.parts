@@ -55,15 +55,17 @@ def is_number(model_str):
     except ValueError:
         return False
 
-def process_model_with_rounding(model_str, percentage=0.18, addition=60000):
+def process_model_with_rounding_and_last_five_digits(model_str, percentage=0.18, addition=60000):
     # پاک‌سازی فرمت عددی
     model_str = model_str.replace("٬", "").replace(",", "").strip()
     if is_number(model_str):
         model_value = float(model_str)
-        # اعمال افزایش 18٪، اضافه کردن ۶۰٬۰۰۰، و گرد کردن خروجی
-        model_value_with_changes = round((model_value * (3 + percentage)) + addition)
+        # اعمال افزایش ۳٪ و اضافه کردن ۶۰٬۰۰۰
+        model_value_with_changes = (model_value * (1 + percentage)) + addition
+        # گرد کردن پنج رقم آخر
+        rounded_value = round(model_value_with_changes / 10000) * 10000
         # بازگشت مقدار به فرمت مورد نظر
-        return f"{model_value_with_changes:,}".replace(",", "٬")
+        return f"{rounded_value:,}".replace(",", "٬")
     return model_str
 
 
@@ -137,8 +139,8 @@ def categorize_data(models):
             current_key = "LCD"
             categorized_data[current_key].append(f"🟦 {model}")
         elif current_key:
-            # پردازش مدل با اضافه کردن ۳٪ و مقدار ثابت ۶۰٬۰۰۰ و گرد کردن عدد
-            processed_model = process_model_with_rounding(model, percentage=0.18, addition=60000)
+            # پردازش مدل عددی با گرد کردن پنج رقم آخر
+            processed_model = process_model_with_rounding_and_last_five_digits(model)
             categorized_data[current_key].append(processed_model)
     return categorized_data
 
