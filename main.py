@@ -137,7 +137,8 @@ def categorize_data(models):
             current_key = "LCD"
             categorized_data[current_key].append(f"🟦 {model}")
         elif current_key:
-            processed_model = process_model_with_percentage_and_addition(model)
+            # پردازش مدل با اضافه کردن ۳٪ و مقدار ثابت ۶۰٬۰۰۰ و گرد کردن عدد
+            processed_model = process_model_with_rounding(model, percentage=0.03, addition=60000)
             categorized_data[current_key].append(processed_model)
     return categorized_data
 
