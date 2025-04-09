@@ -55,13 +55,17 @@ def is_number(model_str):
     except ValueError:
         return False
 
-def process_model_with_percentage(model_str, percentage=0.03):
+def process_model_with_percentage_and_addition(model_str, percentage=0.18, addition=60000):
+    # پاک‌سازی فرمت عددی
     model_str = model_str.replace("٬", "").replace(",", "").strip()
     if is_number(model_str):
         model_value = float(model_str)
-        model_value_with_increase = model_value * (1 + percentage)
-        return f"{model_value_with_increase:,.0f}".replace(",", "٬")
+        # اعمال افزایش ۳٪ و اضافه کردن ۶۰٬۰۰۰
+        model_value_with_changes = (model_value * (1 + percentage)) + addition
+        # بازگشت مقدار به فرمت مورد نظر
+        return f"{model_value_with_changes:,.0f}".replace(",", "٬")
     return model_str
+
 
 def escape_markdown(text):
     escape_chars = ['\\', '(', ')', '[', ']', '~', '*', '_', '-', '+', '>', '#', '.', '!', '|']
