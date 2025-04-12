@@ -55,17 +55,30 @@ def is_number(model_str):
     except ValueError:
         return False
 
-def process_model_with_rounding_and_last_five_digits(model_str, percentage=0.18, addition=60000):
-    # پاک‌سازی فرمت عددی
+def process_model_with_rounding_and_last_five_digits(model_str):
     model_str = model_str.replace("٬", "").replace(",", "").strip()
     if is_number(model_str):
         model_value = float(model_str)
-        # اعمال افزایش ۳٪ و اضافه کردن ۶۰٬۰۰۰
-        model_value_with_changes = (model_value * (1 + percentage)) + addition
-        # گرد کردن پنج رقم آخر
-        rounded_value = round(model_value_with_changes / 10000) * 10000
-        # بازگشت مقدار به فرمت مورد نظر
+
+        if 0 <= model_value < 500_000:
+            model_value += 200_000
+        elif 500_000 <= model_value < 1_000_000:
+            model_value += 220_000
+        elif 1_000_000 <= model_value < 2_000_000:
+            model_value += 300_000
+        elif 2_000_000 <= model_value < 10_000_000:
+            model_value = (model_value * 1.10) + 160_000
+        elif 10_000_000 <= model_value < 20_000_000:
+            model_value = (model_value * 1.08) + 160_000
+        elif 20_000_000 <= model_value < 40_000_000:
+            model_value = (model_value * 1.07) + 160_000
+        elif model_value >= 40_000_000:
+            model_value *= 1.05
+
+        # گرد کردن به ۵ رقم آخر (نزدیک‌ترین ۱۰۰٬۰۰۰)
+        rounded_value = round(model_value / 100000) * 100000
         return f"{rounded_value:,}".replace(",", "٬")
+    
     return model_str
 
 
