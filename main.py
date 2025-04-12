@@ -75,8 +75,8 @@ def process_model_with_rounding_and_last_five_digits(model_str):
         elif model_value >= 40_000_000:
             model_value *= 1.05
 
-        # گرد کردن به ۵ رقم آخر (نزدیک‌ترین ۱۰۰٬۰۰۰)
-        rounded_value = round(model_value / 100000) * 100000
+        # گرد کردن به 4 رقم آخر (نزدیک‌ترین ۱۰٬۰۰۰)
+        rounded_value = round(model_value / 10000) * 10000
         return f"{rounded_value:,}".replace(",", "٬")
     
     return model_str
