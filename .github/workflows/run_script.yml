@@ -1,29 +1,36 @@
-name: Run Scraper Every 5 Minutes
+       
+name: Run Bot Daily
 
 on:
   schedule:
     - cron: "*/20 4-18 * * *"
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
-  run_script:
+  run-bot:
     runs-on: ubuntu-latest
 
+    env:
+      GSHEET_CREDENTIALS_JSON: ${{ secrets.GSHEET_CREDENTIALS_JSON }}
+      TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
+
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v3
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
+          python-version: '3.8'
 
-      - name: Install Dependencies
+      - name: Install dependencies
         run: |
           pip install -r requirements.txt
 
-      - name: Run Scraper
-        env:
-          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-          CHAT_ID: ${{ secrets.CHAT_ID }}
+      - name: Run bot
         run: python main.py
+
