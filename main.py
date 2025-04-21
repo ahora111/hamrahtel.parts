@@ -60,7 +60,9 @@ def process_model_with_rounding_and_last_five_digits(model_str):
     if is_number(model_str):
         model_value = float(model_str)
 
-        if 0 <= model_value < 500_000:
+        if 0 <= model_value < 2:
+            model_value *= 0
+        elif 2 <= model_value < 500_000:
             model_value += 200_000
         elif 500_000 <= model_value < 1_000_000:
             model_value += 220_000
